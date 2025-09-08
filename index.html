@@ -2,260 +2,191 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>我的酷炫个人主页</title>
+  <title>臭屁彦子鹦鹉研究院</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap');
     @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       height: 100vh;
+      background: black;
+      overflow: hidden;
+      font-family: 'Orbitron', sans-serif;
+      color: #fff;
+    }
+
+    /* 背景流动星光 */
+    canvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0;
+    }
+
+    .content {
+      position: relative;
+      z-index: 1;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(-45deg, #ff4e50, #f9d423, #24c6dc, #514a9d);
-      background-size: 400% 400%;
-      animation: gradientBG 15s ease infinite;
-      font-family: 'Poppins', sans-serif;
-      color: white;
-      overflow: hidden;
-      position: relative;
-    }
-
-    @keyframes gradientBG {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-
-    #particles {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
       height: 100%;
-      z-index: 1;
-      pointer-events: none;
-    }
-
-    .card {
-      position: relative;
-      z-index: 2;
-      background: rgba(0,0,0,0.6);
-      padding: 40px 60px;
-      border-radius: 20px;
       text-align: center;
-      box-shadow: 0 0 30px rgba(0,0,0,0.5);
-      backdrop-filter: blur(10px);
-      max-width: 600px;
+      animation: fadeIn 2s ease;
     }
 
     h1 {
-      font-size: 3em;
-      font-weight: 600;
-      text-shadow: 0 0 10px #00f7ff, 0 0 20px #00f7ff, 0 0 40px #00f7ff;
+      font-size: 3.5em;
+      font-weight: bold;
+      color: #0ff;
+      text-shadow: 0 0 20px #0ff, 0 0 40px #0ff, 0 0 80px #0ff;
       margin-bottom: 20px;
+      animation: glowPulse 3s infinite alternate;
+    }
+
+    @keyframes glowPulse {
+      from { text-shadow: 0 0 10px #0ff, 0 0 20px #0ff; }
+      to   { text-shadow: 0 0 30px #0ff, 0 0 60px #0ff; }
     }
 
     p {
-      font-size: 1.2em;
-      margin-bottom: 30px;
-      color: #e0e0e0;
+      font-size: 1.3em;
+      margin-bottom: 40px;
+      color: #ccc;
+      max-width: 700px;
     }
 
+    /* 发光按钮 */
     .btn {
       display: inline-block;
+      margin: 10px;
       padding: 12px 30px;
-      font-size: 1.1em;
-      font-weight: bold;
-      color: #fff;
-      border: 2px solid #00f7ff;
+      border: 2px solid #0ff;
       border-radius: 30px;
+      color: #0ff;
+      font-size: 1.1em;
       text-decoration: none;
+      text-transform: uppercase;
       transition: 0.3s;
+      background: transparent;
       position: relative;
-      overflow: hidden;
-      margin-bottom: 20px;
-      cursor: pointer;
-    }
-
-    .btn::before {
-      content: "";
-      position: absolute;
-      left: -100%;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(120deg, transparent, rgba(0,247,255,0.6), transparent);
-      transition: 0.5s;
-    }
-
-    .btn:hover::before {
-      left: 100%;
     }
 
     .btn:hover {
-      color: #00f7ff;
-      background: rgba(0, 0, 0, 0.4);
-      box-shadow: 0 0 15px #00f7ff;
+      color: black;
+      background: #0ff;
+      box-shadow: 0 0 20px #0ff, 0 0 40px #0ff;
     }
 
-    /* 社交图标 */
-    .social-links {
-      margin-top: 15px;
-    }
-
-    .social-links a {
-      color: #fff;
-      font-size: 1.6em;
-      margin: 0 12px;
-      display: inline-block;
-      transition: 0.3s;
-      text-decoration: none;
-    }
-
-    .social-links a:hover {
-      color: #00f7ff;
-      text-shadow: 0 0 15px #00f7ff, 0 0 30px #00f7ff;
-    }
-
-    /* 关于我区块 */
+    /* 关于我卡片 */
     .about {
-      margin-top: 25px;
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.8s ease, opacity 0.8s ease;
-      opacity: 0;
-      color: #f5f5f5;
-      line-height: 1.6em;
-      font-size: 1em;
+      margin-top: 30px;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 20px;
+      border-radius: 15px;
+      max-width: 600px;
       text-align: left;
+      line-height: 1.6em;
+      display: none;
+      animation: fadeIn 1s ease;
     }
 
     .about.show {
-      max-height: 400px;
-      opacity: 1;
+      display: block;
+    }
+
+    /* 社交链接 */
+    .social-links {
+      margin-top: 25px;
+    }
+    .social-links a {
+      font-size: 1.8em;
+      margin: 0 12px;
+      color: #fff;
+      transition: 0.3s;
+    }
+    .social-links a:hover {
+      color: #0ff;
+      text-shadow: 0 0 15px #0ff;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
 <body>
-  <!-- 粒子背景 -->
-  <canvas id="particles"></canvas>
+  <canvas id="bg"></canvas>
 
-  <div class="card">
-    <h1>嗨，我是 Jeff ✨</h1>
-    <p>欢迎来到我的个人空间，<br>这里展示我的项目、想法与灵感。</p>
-    <a href="https://github.com/jeffhoang" target="_blank" class="btn">访问我的 GitHub</a>
+  <div class="content">
+    <h1>臭屁彦子鹦鹉研究院 🐦</h1>
+    <p>欢迎来到我的鹦鹉空间。这里是科技、创意与臭屁灵感的交汇。</p>
 
-    <!-- 关于我按钮 -->
     <div>
+      <a href="https://github.com/1113407626" target="_blank" class="btn">GitHub</a>
       <button id="aboutBtn" class="btn">关于我</button>
     </div>
 
-    <!-- 关于我区块 -->
     <div id="aboutSection" class="about">
-      <p>👋 大家好，我是 Jeff，一名热爱代码与设计的创作者。</p>
-      <p>💻 我擅长 Web 前端开发、后端服务构建，喜欢探索新技术。</p>
-      <p>🎨 我也对 UI/UX 设计、炫酷动画效果充满兴趣。</p>
-      <p>🚀 未来目标：做出让世界眼前一亮的作品！</p>
+      <p>👋 大家好，我是 <strong>臭屁彦子</strong>。</p>
+      <p>🐦 热爱鹦鹉与西高地，专注于研究 🐦皮燕子🐦。</p>
+      <p>💡 我的梦想：卖出一亿只臭鹦鹉，建立全球最大的鹦鹉帝国。</p>
     </div>
 
-    <!-- 社交链接区块 -->
     <div class="social-links">
-      <a href="https://github.com/jeffhoang" target="_blank"><i class="fab fa-github"></i></a>
-      <a href="https://linkedin.com/in/你的LinkedIn用户名" target="_blank"><i class="fab fa-linkedin"></i></a>
-      <a href="mailto:yourname@example.com"><i class="fas fa-envelope"></i></a>
-      <a href="weixin-qrcode.png" target="_blank"><i class="fab fa-weixin"></i></a>
+      <a href="https://github.com/1113407626" target="_blank"><i class="fab fa-github"></i></a>
+      <a href="mailto:abc1113407626@qq.com"><i class="fas fa-envelope"></i></a>
+      <a href="weixin-qrcode.jpg" target="_blank"><i class="fab fa-weixin"></i></a>
     </div>
   </div>
 
   <script>
-    // 粒子特效
-    const canvas = document.getElementById('particles');
-    const ctx = canvas.getContext('2d');
+    // 星空背景
+    const canvas = document.getElementById("bg");
+    const ctx = canvas.getContext("2d");
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    let particles = [];
-
-    class Particle {
-      constructor() {
-        this.x = Math.random() * canvas.width;
-        this.y = Math.random() * canvas.height;
-        this.size = Math.random() * 3 + 1;
-        this.speedX = Math.random() * 1 - 0.5;
-        this.speedY = Math.random() * 1 - 0.5;
-      }
-      update() {
-        this.x += this.speedX;
-        this.y += this.speedY;
-        if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
-        if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
-      }
-      draw() {
-        ctx.fillStyle = 'rgba(0, 247, 255, 0.8)';
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
-    function init() {
-      particles = [];
-      for (let i = 0; i < 80; i++) {
-        particles.push(new Particle());
-      }
-    }
-
-    function animate() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      particles.forEach(p => {
-        p.update();
-        p.draw();
+    let stars = [];
+    for (let i = 0; i < 150; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        radius: Math.random() * 1.5,
+        dx: (Math.random() - 0.5) * 0.5,
+        dy: (Math.random() - 0.5) * 0.5
       });
-      requestAnimationFrame(animate);
     }
 
-    init();
-    animate();
+    function drawStars() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "white";
+      stars.forEach(s => {
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
+        ctx.fill();
+        s.x += s.dx;
+        s.y += s.dy;
+        if (s.x < 0 || s.x > canvas.width) s.dx *= -1;
+        if (s.y < 0 || s.y > canvas.height) s.dy *= -1;
+      });
+      requestAnimationFrame(drawStars);
+    }
+    drawStars();
+
+    // 关于我按钮
+    const aboutBtn = document.getElementById('aboutBtn');
+    const aboutSection = document.getElementById('aboutSection');
+    aboutBtn.addEventListener('click', () => {
+      aboutSection.classList.toggle('show');
+      aboutBtn.textContent = aboutSection.classList.contains('show') ? '收起' : '关于我';
+    });
 
     window.addEventListener('resize', () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
-      init();
-    });
-
-    window.addEventListener('mousemove', e => {
-      particles.forEach(p => {
-        let dx = p.x - e.x;
-        let dy = p.y - e.y;
-        let dist = Math.sqrt(dx*dx + dy*dy);
-        if (dist < 100) {
-          p.x += dx / dist;
-          p.y += dy / dist;
-        }
-      });
-    });
-
-    // 关于我按钮控制
-    const aboutBtn = document.getElementById('aboutBtn');
-    const aboutSection = document.getElementById('aboutSection');
-    let aboutVisible = false;
-
-    aboutBtn.addEventListener('click', () => {
-      aboutVisible = !aboutVisible;
-      if (aboutVisible) {
-        aboutSection.classList.add('show');
-        aboutBtn.textContent = '收起';
-      } else {
-        aboutSection.classList.remove('show');
-        aboutBtn.textContent = '关于我';
-      }
     });
   </script>
 </body>
