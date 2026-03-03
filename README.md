@@ -15,35 +15,46 @@
 
 ## 🚀 快速配置（3 步完成！）
 
-### 第 1 步：导入 CSV 创建表（最简单！）
+### 第 1 步：创建数据表（3 种方法任选）
 
-在你的 Supabase 项目：https://supabase.com/dashboard/project/nxiwatmgedlvzlxmgyhw
+#### 方法 A：使用 SQL 脚本（推荐⭐ 最可靠！）
+
+1. 访问：https://supabase.com/dashboard/project/nxiwatmgedlvzlxmgyhw
+2. 左侧菜单 → **SQL Editor**
+3. 点击 **New query**
+4. 复制 `create-table.sql` 文件内容并粘贴
+5. 点击 **Run** 运行
+6. ✅ 表创建完成，还自动添加了示例数据！
+
+#### 方法 B：导入 CSV
 
 1. 左侧菜单 → **Table Editor**
 2. 点击 **Import data** → **CSV**
-3. 上传 `parrots-table.csv` 文件（或复制下面的内容）
+3. 上传 `parrots-table.csv` 文件
 4. 表名输入：`parrots`
 5. 点击 **Import**
 
-**或者手动创建表：**
+> 如果 CSV 导入报错，请使用方法 A（SQL 脚本）
 
-1. **New table**
+#### 方法 C：手动创建表
+
+1. **Table Editor** → **New table**
 2. 表名：`parrots`
 3. **取消勾选** "Enable Row Level Security"
 4. **Save**
 
-然后添加以下列（点击 **Add column**）：
+然后添加以下列：
 
-| 列名 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `name` | text | - | 鹦鹉名字 |
-| `price` | int8 | - | 价格（元） |
-| `days` | int8 | - | 手养天数 |
-| `desc` | text | - | 描述（可选） |
-| `image` | text | - | 图片 base64 |
-| `video` | text | - | 视频 base64（可选） |
+| 列名 | 类型 | 说明 |
+|------|------|------|
+| `name` | text | 鹦鹉名字 |
+| `price` | int8 | 价格（元） |
+| `days` | int8 | 手养天数 |
+| `desc` | text | 描述 |
+| `image` | text | 图片 |
+| `video` | text | 视频 |
 
-> 💡 `id` 和 `created_at` 会自动创建，不用手动添加！
+> `id` 和 `created_at` 会自动创建！
 
 ### 第 2 步：获取 API 密钥
 
