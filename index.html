@@ -702,14 +702,6 @@
           <div class="number" id="total-parrots">0</div>
           <div class="label">鹦鹉总数</div>
         </div>
-        <div class="stat-card">
-          <div class="number" id="avg-days">0</div>
-          <div class="label">平均手养天数</div>
-        </div>
-        <div class="stat-card">
-          <div class="number" id="total-value">0</div>
-          <div class="label">总价值 (元)</div>
-        </div>
       </div>
 
       <!-- 鹦鹉展示 -->
@@ -763,6 +755,20 @@
         </p>
       </div>
 
+      <!-- 管理面板统计 -->
+      <div id="admin-stats" style="display: none; margin-bottom: 20px;">
+        <div class="stats-container" style="margin: 0 0 20px 0;">
+          <div class="stat-card">
+            <div class="number" id="admin-avg-days">0</div>
+            <div class="label">平均手养天数</div>
+          </div>
+          <div class="stat-card">
+            <div class="number" id="admin-total-value">0</div>
+            <div class="label">总价值 (元)</div>
+          </div>
+        </div>
+      </div>
+
       <!-- 管理表单（登录后显示） -->
       <div id="admin-form-container" style="display: none;">
         <div style="text-align: right; margin-bottom: 15px;">
@@ -771,8 +777,9 @@
           </button>
         </div>
         <h2 class="admin-title">
-          <i class="fas fa-plus-circle"></i> 添加新鹦鹉
+          <i class="fas fa-plus-circle" id="form-title-icon"></i> <span id="form-title">添加新鹦鹉</span>
         </h2>
+        <input type="hidden" id="edit-parrot-id">
         <form id="parrot-form">
           <div class="form-group">
             <label><i class="fas fa-tag"></i> 鹦鹉名字</label>
@@ -970,7 +977,7 @@
     // 保存数据到 Supabase
     async function saveParrotToSupabase(parrot) {
       if (!isSupabaseConfigured) {
-        alert('Supabase 未配置，无法保存数据！');
+        showToast('❌ Supabase 未配置，无法保存数据！', 'error');
         return false;
       }
 
@@ -980,11 +987,61 @@
 
       if (error) {
         console.error('保存失败:', error);
-        alert('保存失败：' + error.message);
+        showToast('❌ 保存失败：' + error.message, 'error');
         return false;
       }
 
       return true;
+    }
+
+    // 更新数据到 Supabase
+    async function updateParrotInSupabase(id, parrot) {
+      if (!isSupabaseConfigured) {
+        showToast('❌ Supabase 未配置，无法更新数据！', 'error');
+        return false;
+      }
+
+      const { data, error } = await sbClient
+        .from('parrots')
+        .update(parrot)
+        .eq('id', id);
+
+      if (error) {
+        console.error('更新失败:', error);
+        showToast('❌ 更新失败：' + error.message, 'error');
+        return false;
+      }
+
+      return true;
+    }
+
+    // 编辑鹦鹉
+    function editParrot(id) {
+      const parrot = parrots.find(p => p.id === id);
+      if (!parrot) return;
+
+      // 填充表单
+      document.getElementById('parrot-name').value = parrot.name;
+      document.getElementById('parrot-price').value = parrot.price;
+      document.getElementById('parrot-days').value = parrot.days;
+      document.getElementById('parrot-desc').value = parrot.description || '';
+      document.getElementById('edit-parrot-id').value = id;
+
+      // 显示图片预览
+      const preview = document.getElementById('image-preview');
+      preview.innerHTML = `<img src="${parrot.image}" alt="${parrot.name}">`;
+
+      // 切换到管理面板
+      showSection('admin');
+      document.getElementById('admin-login').style.display = 'none';
+      document.getElementById('admin-form-container').style.display = 'block';
+      document.getElementById('admin-stats').style.display = 'block';
+      
+      // 修改标题
+      document.getElementById('form-title').textContent = '编辑鹦鹉信息';
+      document.getElementById('form-title-icon').className = 'fas fa-edit';
+      
+      showToast(`📝 正在编辑：${parrot.name}`, 'info');
     }
 
     // 删除鹦鹉
@@ -1060,8 +1117,11 @@
             ${p.description ? `<p style="color: #aaa; margin-bottom: 10px;">${p.description}</p>` : ''}
             <div class="parrot-price">${p.price}</div>
           </div>
-          <button class="delete-btn" onclick="deleteParrot('${p.id}')">
+          <button class="delete-btn" onclick="deleteParrot('${p.id}')" style="right: 50px;">
             <i class="fas fa-trash"></i>
+          </button>
+          <button class="delete-btn" onclick="editParrot('${p.id}')" style="background: rgba(255, 165, 0, 0.8); border-color: #ffa500;">
+            <i class="fas fa-edit"></i>
           </button>
         </div>
       `).join('');
@@ -1091,11 +1151,14 @@
       if (parrots.length > 0) {
         const totalDays = parrots.reduce((sum, p) => sum + parseInt(p.days || 0), 0);
         const totalPrice = parrots.reduce((sum, p) => sum + parseInt(p.price || 0), 0);
-        document.getElementById('avg-days').textContent = Math.round(totalDays / parrots.length);
-        document.getElementById('total-value').textContent = totalPrice.toLocaleString();
+        const avgDays = Math.round(totalDays / parrots.length);
+        
+        // 管理员面板统计
+        document.getElementById('admin-avg-days').textContent = avgDays;
+        document.getElementById('admin-total-value').textContent = totalPrice.toLocaleString();
       } else {
-        document.getElementById('avg-days').textContent = '0';
-        document.getElementById('total-value').textContent = '0';
+        document.getElementById('admin-avg-days').textContent = '0';
+        document.getElementById('admin-total-value').textContent = '0';
       }
     }
 
@@ -1192,26 +1255,48 @@
         });
       }
 
-      const success = await saveParrotToSupabase({
-        name,
-        price: parseInt(price),
-        days: parseInt(days),
-        description: desc,
-        image: imageData,
-        video: videoData
-      });
-
-      if (success) {
-        // 重置表单
-        this.reset();
-        document.getElementById('image-preview').innerHTML = '';
-        showToast(`🎉 ${name} 已成功添加到云端！`, 'success');
+      const editId = document.getElementById('edit-parrot-id').value;
+      let success;
+      
+      if (editId) {
+        // 编辑模式
+        success = await updateParrotInSupabase(editId, {
+          name,
+          price: parseInt(price),
+          days: parseInt(days),
+          description: desc,
+          image: imageData,
+          video: videoData
+        });
         
-        // 重新加载数据，实时更新画面
-        loadParrots();
+        if (success) {
+          this.reset();
+          document.getElementById('image-preview').innerHTML = '';
+          document.getElementById('edit-parrot-id').value = '';
+          document.getElementById('form-title').textContent = '添加新鹦鹉';
+          document.getElementById('form-title-icon').className = 'fas fa-plus-circle';
+          showToast(`✅ ${name} 已更新！`, 'success');
+          loadParrots();
+          showSection('home');
+        }
+      } else {
+        // 新增模式
+        success = await saveParrotToSupabase({
+          name,
+          price: parseInt(price),
+          days: parseInt(days),
+          description: desc,
+          image: imageData,
+          video: videoData
+        });
         
-        // 切换到首页
-        showSection('home');
+        if (success) {
+          this.reset();
+          document.getElementById('image-preview').innerHTML = '';
+          showToast(`🎉 ${name} 已成功添加到云端！`, 'success');
+          loadParrots();
+          showSection('home');
+        }
       }
 
       btn.disabled = false;
@@ -1227,6 +1312,7 @@
       if (input === ADMIN_PASSWORD) {
         document.getElementById('admin-login').style.display = 'none';
         document.getElementById('admin-form-container').style.display = 'block';
+        document.getElementById('admin-stats').style.display = 'block';
         document.getElementById('admin-password').value = '';
         showToast('✅ 验证成功！', 'success');
       } else {
@@ -1270,6 +1356,7 @@
         // 每次点击管理鹦鹉都强制要求重新登录
         document.getElementById('admin-login').style.display = 'block';
         document.getElementById('admin-form-container').style.display = 'none';
+        document.getElementById('admin-stats').style.display = 'none';
         document.getElementById('admin-password').value = '';
         document.getElementById('admin-password').focus();
       }
