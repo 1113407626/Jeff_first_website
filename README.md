@@ -131,15 +131,17 @@ GitHub Pages 会自动更新：https://1113407626.github.io/Jeff_first_website/
 
 ## 🔒 安全提示
 
-### 当前模式（简单）
-- 管理员密码：`1113407626`
-- 密码在前端，懂技术的人可以看到
-- 适合个人使用，防君子不防小人
+### 管理员密码
+- 默认密码：`ParrotKing2026!`
+- **强烈建议修改**为你自己的密码
+- 在 `index.html` 中搜索 `ADMIN_PASSWORD` 修改
 
-### 如需更高安全
-1. 修改 `index.html` 中的 `ADMIN_PASSWORD`
-2. 启用 Supabase Row Level Security (RLS)
-3. 设置更复杂的权限规则
+### 部署建议
+- ✅ 使用 **Vercel** 部署
+- ✅ 设置 GitHub 仓库为**私有**
+- ✅ 启用 Supabase RLS（行级安全）
+
+详细部署指南见：`VERCEL_DEPLOY.md`
 
 ## 💡 提示
 
