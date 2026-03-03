@@ -16,8 +16,10 @@ CREATE TABLE parrots (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+notify pgrst, 'reload schema';
+
 -- 插入示例数据
-INSERT INTO parrots (name, price, days, description, image, video) VALUES
-('小绿', 1500, 45, '活泼好动，喜欢站肩膀上', 'https://picsum.photos/400/300?random=1', NULL),
-('彩虹', 2200, 60, '羽毛颜色非常漂亮，会学说话', 'https://picsum.photos/400/300?random=2', NULL),
-('豆豆', 1800, 38, '特别粘人，喜欢被摸头', 'https://picsum.photos/400/300?random=3', NULL);
+-- INSERT INTO parrots (name, price, days, description, image, video) VALUES
+-- ('小绿', 1500, 45, '活泼好动，喜欢站肩膀上', 'https://picsum.photos/400/300?random=1', NULL),
+-- ('彩虹', 2200, 60, '羽毛颜色非常漂亮，会学说话', 'https://picsum.photos/400/300?random=2', NULL),
+-- ('豆豆', 1800, 38, '特别粘人，喜欢被摸头', 'https://picsum.photos/400/300?random=3', NULL);

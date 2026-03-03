@@ -597,6 +597,72 @@
       border: 2px solid #ff0000;
       color: #ff0000;
     }
+
+    /* Toast 提示 */
+    .toast-container {
+      position: fixed;
+      top: 100px;
+      right: 20px;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .toast {
+      min-width: 300px;
+      padding: 15px 20px;
+      border-radius: 10px;
+      color: #fff;
+      font-weight: 700;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: slideInRight 0.3s ease;
+      backdrop-filter: blur(10px);
+    }
+
+    .toast.success {
+      background: linear-gradient(45deg, rgba(0, 255, 0, 0.8), rgba(0, 200, 0, 0.8));
+      border: 2px solid #00ff00;
+    }
+
+    .toast.error {
+      background: linear-gradient(45deg, rgba(255, 0, 0, 0.8), rgba(200, 0, 0, 0.8));
+      border: 2px solid #ff0000;
+    }
+
+    .toast.info {
+      background: linear-gradient(45deg, rgba(0, 255, 255, 0.8), rgba(0, 200, 255, 0.8));
+      border: 2px solid #00ffff;
+    }
+
+    .toast i {
+      font-size: 1.3em;
+    }
+
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(100px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes slideOutRight {
+      from {
+        opacity: 1;
+        transform: translateX(0);
+      }
+      to {
+        opacity: 0;
+        transform: translateX(100px);
+      }
+    }
   </style>
 </head>
 <body>
@@ -617,6 +683,9 @@
       </button>
     </div>
   </nav>
+
+  <!-- Toast 提示容器 -->
+  <div class="toast-container" id="toast-container"></div>
 
   <!-- 主内容 -->
   <div class="main-content">
@@ -759,13 +828,13 @@
     // ============================================
     // 初始化 Supabase
     // ============================================
-    let supabase = null;
+    let sbClient = null;
     let isSupabaseConfigured = false;
 
     try {
       if (SUPABASE_ANON_KEY && SUPABASE_ANON_KEY.length > 20 && !SUPABASE_ANON_KEY.includes('YOUR_')) {
         // 修复：移除这里的 let 关键字
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         isSupabaseConfigured = true;
         const configNotice = document.getElementById('config-notice');
         if (configNotice) configNotice.style.display = 'none';
@@ -841,7 +910,7 @@
       }
 
       // 加载数据
-      const { data, error } = await supabase
+      const { data, error } = await sbClient
         .from('parrots')
         .select('*')
         .order('created_at', { ascending: false });
@@ -874,7 +943,7 @@
 
     // 设置实时订阅 - 数据变化自动更新
     function setupRealtimeSubscription() {
-      supabase
+      sbClient
         .channel('parrots-channel')
         .on('postgres_changes', 
           { 
@@ -897,7 +966,7 @@
         return false;
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await sbClient
         .from('parrots')
         .insert([parrot]);
 
@@ -912,21 +981,29 @@
 
     // 删除鹦鹉
     async function deleteParrot(id) {
-      if (!confirm('确定要删除这只鹦鹉吗？')) return;
+      const parrot = parrots.find(p => p.id === id);
+      
+      if (!confirm(`确定要删除 "${parrot?.name || '这只鹦鹉'}" 吗？\n此操作不可恢复！`)) return;
 
       if (!isSupabaseConfigured) {
-        alert('Supabase 未配置，无法删除！');
+        showToast('❌ Supabase 未配置，无法删除！', 'error');
         return;
       }
 
-      const { error } = await supabase
+      const { error } = await sbClient
         .from('parrots')
         .delete()
         .eq('id', id);
 
       if (error) {
         console.error('删除失败:', error);
-        alert('删除失败：' + error.message);
+        showToast('❌ 删除失败：' + error.message, 'error');
+      } else {
+        // 从本地数组移除，实时更新画面
+        parrots = parrots.filter(p => p.id !== id);
+        renderParrots();
+        updateStats();
+        showToast('✅ 已成功删除！', 'success');
       }
     }
 
@@ -1074,7 +1151,7 @@
         // 重置表单
         this.reset();
         document.getElementById('image-preview').innerHTML = '';
-        alert(`🎉 ${name} 已成功添加到云端！`);
+        showToast(`🎉 ${name} 已成功添加到云端！`, 'success');
         showSection('home');
       }
 
@@ -1132,6 +1209,24 @@
         navBtns[1].classList.add('active');
         checkLoginStatus();
       }
+    }
+
+    // Toast 提示函数
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      
+      const icon = type === 'success' ? 'check-circle' : type === 'error' ? 'times-circle' : 'info-circle';
+      toast.innerHTML = `<i class="fas fa-${icon}"></i><span>${message}</span>`;
+      
+      container.appendChild(toast);
+      
+      // 3 秒后自动移除
+      setTimeout(() => {
+        toast.style.animation = 'slideOutRight 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
     }
 
     // 初始化
