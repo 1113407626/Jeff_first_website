@@ -560,10 +560,34 @@
 
     <!-- 管理面板 -->
     <div id="admin-section" class="admin-panel">
-      <h2 class="admin-title">
-        <i class="fas fa-plus-circle"></i> 添加新鹦鹉
-      </h2>
-      <form id="parrot-form">
+      <!-- 登录界面 -->
+      <div id="admin-login">
+        <h2 class="admin-title">
+          <i class="fas fa-lock"></i> 管理员登录
+        </h2>
+        <div class="form-group">
+          <label><i class="fas fa-key"></i> 输入密码</label>
+          <input type="password" id="admin-password" placeholder="请输入管理员密码" onkeypress="if(event.key==='Enter') checkPassword()">
+        </div>
+        <button type="button" class="submit-btn" onclick="checkPassword()">
+          <i class="fas fa-unlock"></i> 解锁管理面板
+        </button>
+        <p style="text-align: center; margin-top: 15px; color: #666; font-size: 0.9em;">
+          <i class="fas fa-shield-alt"></i> 仅管理员可访问
+        </p>
+      </div>
+
+      <!-- 管理表单（登录后显示） -->
+      <div id="admin-form-container" style="display: none;">
+        <div style="text-align: right; margin-bottom: 15px;">
+          <button type="button" onclick="logout()" style="background: rgba(255,0,0,0.3); border: 2px solid #ff0000; padding: 8px 15px; border-radius: 10px; color: #fff; cursor: pointer;">
+            <i class="fas fa-sign-out-alt"></i> 退出登录
+          </button>
+        </div>
+        <h2 class="admin-title">
+          <i class="fas fa-plus-circle"></i> 添加新鹦鹉
+        </h2>
+        <form id="parrot-form">
         <div class="form-group">
           <label><i class="fas fa-tag"></i> 鹦鹉名字</label>
           <input type="text" id="parrot-name" placeholder="例如：小绿、彩虹、豆豆" required>
@@ -600,6 +624,7 @@
           <i class="fas fa-save"></i> 保存鹦鹉信息
         </button>
       </form>
+      </div>
     </div>
   </div>
 
@@ -813,6 +838,38 @@
       showSection('home');
     });
 
+    // 管理员密码（请修改为你的密码！）
+    const ADMIN_PASSWORD = '1113407626';
+
+    // 检查密码
+    function checkPassword() {
+      const input = document.getElementById('admin-password').value;
+      if (input === ADMIN_PASSWORD) {
+        document.getElementById('admin-login').style.display = 'none';
+        document.getElementById('admin-form-container').style.display = 'block';
+        sessionStorage.setItem('adminLoggedIn', 'true');
+      } else {
+        alert('❌ 密码错误！只有管理员可以访问。');
+        document.getElementById('admin-password').value = '';
+      }
+    }
+
+    // 退出登录
+    function logout() {
+      sessionStorage.removeItem('adminLoggedIn');
+      document.getElementById('admin-login').style.display = 'block';
+      document.getElementById('admin-form-container').style.display = 'none';
+      document.getElementById('admin-password').value = '';
+    }
+
+    // 检查登录状态
+    function checkLoginStatus() {
+      if (sessionStorage.getItem('adminLoggedIn') === 'true') {
+        document.getElementById('admin-login').style.display = 'none';
+        document.getElementById('admin-form-container').style.display = 'block';
+      }
+    }
+
     // 切换页面
     function showSection(section) {
       const homeSection = document.getElementById('home-section');
@@ -829,6 +886,7 @@
         adminSection.classList.add('show');
         navBtns[0].classList.remove('active');
         navBtns[1].classList.add('active');
+        checkLoginStatus();
       }
     }
 
