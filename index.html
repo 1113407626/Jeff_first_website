@@ -2,188 +2,841 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>臭屁彦子鹦鹉研究院</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🦜 手养鹦鹉之家</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Noto+Sans+SC:wght@400;700&display=swap');
     @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      height: 100vh;
-      background: black;
-      overflow: hidden;
-      font-family: 'Orbitron', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%);
+      font-family: 'Noto Sans SC', 'Orbitron', sans-serif;
       color: #fff;
+      overflow-x: hidden;
     }
 
-    /* 背景流动星光 */
-    canvas {
-      position: absolute;
+    /* 动态背景 */
+    #bg-canvas {
+      position: fixed;
       top: 0; left: 0;
       width: 100%; height: 100%;
       z-index: 0;
+      pointer-events: none;
     }
 
-    .content {
+    /* 导航栏 */
+    .navbar {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      padding: 15px 30px;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      z-index: 1000;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #00ffff;
+      box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+    }
+
+    .logo {
+      font-size: 1.8em;
+      font-weight: 900;
+      color: #00ffff;
+      text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo i { animation: float 3s ease-in-out infinite; }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 20px;
+    }
+
+    .nav-btn {
+      padding: 10px 20px;
+      border: 2px solid #00ffff;
+      border-radius: 25px;
+      color: #00ffff;
+      background: transparent;
+      cursor: pointer;
+      font-size: 1em;
+      transition: 0.3s;
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    .nav-btn:hover {
+      background: #00ffff;
+      color: #000;
+      box-shadow: 0 0 20px #00ffff;
+    }
+
+    .nav-btn.active {
+      background: #00ffff;
+      color: #000;
+    }
+
+    /* 主内容区 */
+    .main-content {
       position: relative;
       z-index: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
+      padding: 100px 30px 50px;
+      min-height: 100vh;
+    }
+
+    /* 欢迎区 */
+    .hero {
       text-align: center;
-      animation: fadeIn 2s ease;
+      margin-bottom: 50px;
+      animation: slideDown 1s ease;
     }
 
-    h1 {
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-50px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero h1 {
       font-size: 3.5em;
-      font-weight: bold;
-      color: #0ff;
-      text-shadow: 0 0 20px #0ff, 0 0 40px #0ff, 0 0 80px #0ff;
-      margin-bottom: 20px;
-      animation: glowPulse 3s infinite alternate;
+      font-weight: 900;
+      color: #00ffff;
+      text-shadow: 0 0 20px #00ffff, 0 0 40px #00ffff;
+      margin-bottom: 15px;
     }
 
-    @keyframes glowPulse {
-      from { text-shadow: 0 0 10px #0ff, 0 0 20px #0ff; }
-      to   { text-shadow: 0 0 30px #0ff, 0 0 60px #0ff; }
-    }
-
-    p {
+    .hero p {
       font-size: 1.3em;
-      margin-bottom: 40px;
-      color: #ccc;
-      max-width: 700px;
+      color: #aaa;
+      max-width: 600px;
+      margin: 0 auto;
     }
 
-    /* 发光按钮 */
-    .btn {
-      display: inline-block;
-      margin: 10px;
-      padding: 12px 30px;
-      border: 2px solid #0ff;
-      border-radius: 30px;
-      color: #0ff;
-      font-size: 1.1em;
-      text-decoration: none;
-      text-transform: uppercase;
+    /* 统计卡片 */
+    .stats-container {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin: 30px 0 50px;
+      flex-wrap: wrap;
+    }
+
+    .stat-card {
+      background: rgba(0, 255, 255, 0.1);
+      border: 2px solid #00ffff;
+      border-radius: 15px;
+      padding: 20px 40px;
+      text-align: center;
+      backdrop-filter: blur(10px);
+      animation: scaleIn 0.5s ease;
+    }
+
+    @keyframes scaleIn {
+      from { opacity: 0; transform: scale(0.8); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .stat-card .number {
+      font-size: 2.5em;
+      font-weight: 900;
+      color: #00ffff;
+      text-shadow: 0 0 10px #00ffff;
+    }
+
+    .stat-card .label {
+      font-size: 1em;
+      color: #aaa;
+      margin-top: 5px;
+    }
+
+    /* 鹦鹉展示区 */
+    .parrots-section {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .section-title {
+      font-size: 2em;
+      color: #00ffff;
+      text-align: center;
+      margin-bottom: 30px;
+      text-shadow: 0 0 10px #00ffff;
+    }
+
+    .parrots-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 25px;
+    }
+
+    .parrot-card {
+      background: rgba(0, 0, 0, 0.6);
+      border: 2px solid #00ffff;
+      border-radius: 20px;
+      overflow: hidden;
       transition: 0.3s;
-      background: transparent;
+      position: relative;
+      animation: cardAppear 0.5s ease;
+    }
+
+    @keyframes cardAppear {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .parrot-card:hover {
+      transform: translateY(-10px) scale(1.02);
+      box-shadow: 0 10px 40px rgba(0, 255, 255, 0.4);
+      border-color: #ff00ff;
+    }
+
+    .parrot-card:hover .parrot-image {
+      transform: scale(1.1);
+    }
+
+    .parrot-image-container {
+      width: 100%;
+      height: 250px;
+      overflow: hidden;
       position: relative;
     }
 
-    .btn:hover {
-      color: black;
-      background: #0ff;
-      box-shadow: 0 0 20px #0ff, 0 0 40px #0ff;
+    .parrot-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: 0.5s;
     }
 
-    /* 关于我卡片 */
-    .about {
-      margin-top: 30px;
-      background: rgba(0, 0, 0, 0.6);
-      padding: 20px;
-      border-radius: 15px;
-      max-width: 600px;
-      text-align: left;
-      line-height: 1.6em;
+    .parrot-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
       display: none;
-      animation: fadeIn 1s ease;
     }
 
-    .about.show {
-      display: block;
-    }
+    .parrot-card.video-mode .parrot-image { display: none; }
+    .parrot-card.video-mode .parrot-video { display: block; }
 
-    /* 社交链接 */
-    .social-links {
-      margin-top: 25px;
-    }
-    .social-links a {
-      font-size: 1.8em;
-      margin: 0 12px;
-      color: #fff;
+    .video-toggle {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      border: 2px solid #00ffff;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      color: #00ffff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       transition: 0.3s;
-    }
-    .social-links a:hover {
-      color: #0ff;
-      text-shadow: 0 0 15px #0ff;
+      z-index: 10;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to   { opacity: 1; transform: translateY(0); }
+    .video-toggle:hover {
+      background: #00ffff;
+      color: #000;
+    }
+
+    .parrot-info {
+      padding: 20px;
+    }
+
+    .parrot-name {
+      font-size: 1.5em;
+      font-weight: 700;
+      color: #00ffff;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .parrot-name i { animation: float 2s ease-in-out infinite; }
+
+    .parrot-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .detail-item {
+      background: rgba(0, 255, 255, 0.1);
+      padding: 10px;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    .detail-item .icon {
+      font-size: 1.2em;
+      margin-bottom: 5px;
+    }
+
+    .detail-item .value {
+      font-size: 1.1em;
+      font-weight: 700;
+      color: #ff00ff;
+    }
+
+    .detail-item .label {
+      font-size: 0.8em;
+      color: #888;
+    }
+
+    .parrot-price {
+      font-size: 1.8em;
+      font-weight: 900;
+      color: #00ff00;
+      text-align: center;
+      text-shadow: 0 0 10px #00ff00;
+      margin-top: 15px;
+    }
+
+    .parrot-price::before { content: '¥ '; }
+
+    .days-badge {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: linear-gradient(45deg, #ff00ff, #00ffff);
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 0.9em;
+      box-shadow: 0 0 15px rgba(255, 0, 255, 0.5);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    /* 管理面板 */
+    .admin-panel {
+      display: none;
+      max-width: 800px;
+      margin: 0 auto;
+      background: rgba(0, 0, 0, 0.8);
+      border: 2px solid #00ffff;
+      border-radius: 20px;
+      padding: 30px;
+      backdrop-filter: blur(10px);
+    }
+
+    .admin-panel.show { display: block; }
+
+    .admin-title {
+      font-size: 1.8em;
+      color: #00ffff;
+      text-align: center;
+      margin-bottom: 25px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      color: #00ffff;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 12px 15px;
+      background: rgba(0, 255, 255, 0.1);
+      border: 2px solid #00ffff;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 1em;
+      font-family: inherit;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      outline: none;
+      box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(45deg, #00ffff, #ff00ff);
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 1.2em;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.3s;
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    .submit-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 30px rgba(0, 255, 255, 0.6);
+    }
+
+    .file-preview {
+      margin-top: 10px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .file-preview img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 2px solid #00ffff;
+    }
+
+    /* 删除按钮 */
+    .delete-btn {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      background: rgba(255, 0, 0, 0.8);
+      border: 2px solid #ff0000;
+      border-radius: 50%;
+      width: 35px;
+      height: 35px;
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: 0.3s;
+      opacity: 0;
+    }
+
+    .parrot-card:hover .delete-btn { opacity: 1; }
+
+    .delete-btn:hover {
+      background: #ff0000;
+      box-shadow: 0 0 15px #ff0000;
+    }
+
+    /* 空状态 */
+    .empty-state {
+      text-align: center;
+      padding: 50px;
+      color: #666;
+    }
+
+    .empty-state i {
+      font-size: 4em;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    /* 响应式 */
+    @media (max-width: 768px) {
+      .navbar {
+        flex-direction: column;
+        gap: 15px;
+        padding: 15px;
+      }
+
+      .nav-links { flex-wrap: wrap; justify-content: center; }
+
+      .hero h1 { font-size: 2em; }
+
+      .parrots-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stats-container { gap: 15px; }
+
+      .stat-card { padding: 15px 25px; }
+
+      .form-row { grid-template-columns: 1fr; }
+    }
+
+    /* 鹦鹉动画 */
+    .flying-parrot {
+      position: fixed;
+      font-size: 2em;
+      z-index: 999;
+      pointer-events: none;
+      animation: flyAcross 15s linear infinite;
+    }
+
+    @keyframes flyAcross {
+      from {
+        left: -50px;
+        top: 20%;
+        transform: scaleX(1);
+      }
+      to {
+        left: 100%;
+        top: 30%;
+        transform: scaleX(-1);
+      }
     }
   </style>
 </head>
 <body>
-  <canvas id="bg"></canvas>
+  <canvas id="bg-canvas"></canvas>
 
-  <div class="content">
-    <h1>臭屁彦子鹦鹉研究院 🐦</h1>
-    <p>欢迎来到我的鹦鹉空间。这里是科技、创意与臭屁灵感的交汇。</p>
+  <!-- 导航栏 -->
+  <nav class="navbar">
+    <div class="logo">
+      <i class="fas fa-feather-alt"></i>
+      手养鹦鹉之家
+    </div>
+    <div class="nav-links">
+      <button class="nav-btn active" onclick="showSection('home')">
+        <i class="fas fa-home"></i> 首页
+      </button>
+      <button class="nav-btn" onclick="showSection('admin')">
+        <i class="fas fa-cog"></i> 管理鹦鹉
+      </button>
+    </div>
+  </nav>
 
-    <div>
-      <a href="https://github.com/1113407626" target="_blank" class="btn">GitHub</a>
-      <button id="aboutBtn" class="btn">关于我</button>
+  <!-- 主内容 -->
+  <div class="main-content">
+    <!-- 首页 -->
+    <div id="home-section">
+      <div class="hero">
+        <h1>🦜 手养鹦鹉之家 🦜</h1>
+        <p>每一只鹦鹉都是精心手养的宝贝，寻找温暖的新家</p>
+      </div>
+
+      <!-- 统计 -->
+      <div class="stats-container">
+        <div class="stat-card">
+          <div class="number" id="total-parrots">0</div>
+          <div class="label">鹦鹉总数</div>
+        </div>
+        <div class="stat-card">
+          <div class="number" id="avg-days">0</div>
+          <div class="label">平均手养天数</div>
+        </div>
+        <div class="stat-card">
+          <div class="number" id="total-value">0</div>
+          <div class="label">总价值 (元)</div>
+        </div>
+      </div>
+
+      <!-- 鹦鹉展示 -->
+      <div class="parrots-section">
+        <h2 class="section-title">
+          <i class="fas fa-crow"></i> 在家的鹦鹉宝贝们
+        </h2>
+        <div class="parrots-grid" id="parrots-grid">
+          <!-- 鹦鹉卡片将在这里动态生成 -->
+        </div>
+      </div>
     </div>
 
-    <div id="aboutSection" class="about">
-      <p>👋 大家好，我是 <strong>臭屁彦子</strong>。</p>
-      <p>🐦 热爱鹦鹉与西高地，专注于研究 🐦皮燕子🐦。</p>
-      <p>💡 我的梦想：卖出一亿只臭鹦鹉，建立全球最大的鹦鹉帝国。</p>
-    </div>
+    <!-- 管理面板 -->
+    <div id="admin-section" class="admin-panel">
+      <h2 class="admin-title">
+        <i class="fas fa-plus-circle"></i> 添加新鹦鹉
+      </h2>
+      <form id="parrot-form">
+        <div class="form-group">
+          <label><i class="fas fa-tag"></i> 鹦鹉名字</label>
+          <input type="text" id="parrot-name" placeholder="例如：小绿、彩虹、豆豆" required>
+        </div>
 
-    <div class="social-links">
-      <a href="https://github.com/1113407626" target="_blank"><i class="fab fa-github"></i></a>
-      <a href="mailto:abc1113407626@qq.com"><i class="fas fa-envelope"></i></a>
-      <a href="weixin-qrcode.jpg" target="_blank"><i class="fab fa-weixin"></i></a>
+        <div class="form-row">
+          <div class="form-group">
+            <label><i class="fas fa-money-bill"></i> 价格 (元)</label>
+            <input type="number" id="parrot-price" placeholder="例如：1500" required>
+          </div>
+          <div class="form-group">
+            <label><i class="fas fa-calendar"></i> 手养天数</label>
+            <input type="number" id="parrot-days" placeholder="例如：45" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label><i class="fas fa-image"></i> 鹦鹉照片</label>
+          <input type="file" id="parrot-image" accept="image/*" onchange="previewImage(this)">
+          <div class="file-preview" id="image-preview"></div>
+        </div>
+
+        <div class="form-group">
+          <label><i class="fas fa-video"></i> 鹦鹉视频 (可选)</label>
+          <input type="file" id="parrot-video" accept="video/*">
+        </div>
+
+        <div class="form-group">
+          <label><i class="fas fa-align-left"></i> 描述 (可选)</label>
+          <textarea id="parrot-desc" rows="3" placeholder="介绍一下这只鹦鹉的特点..."></textarea>
+        </div>
+
+        <button type="submit" class="submit-btn">
+          <i class="fas fa-save"></i> 保存鹦鹉信息
+        </button>
+      </form>
     </div>
   </div>
 
   <script>
-    // 星空背景
-    const canvas = document.getElementById("bg");
-    const ctx = canvas.getContext("2d");
+    // 动态背景
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    let stars = [];
-    for (let i = 0; i < 150; i++) {
-      stars.push({
+    let particles = [];
+    for (let i = 0; i < 100; i++) {
+      particles.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        radius: Math.random() * 1.5,
-        dx: (Math.random() - 0.5) * 0.5,
-        dy: (Math.random() - 0.5) * 0.5
+        radius: Math.random() * 2 + 0.5,
+        dx: (Math.random() - 0.5) * 0.3,
+        dy: (Math.random() - 0.5) * 0.3,
+        color: `hsl(${Math.random() * 60 + 160}, 100%, 50%)`
       });
     }
 
-    function drawStars() {
+    function animate() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "white";
-      stars.forEach(s => {
+      particles.forEach(p => {
         ctx.beginPath();
-        ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
         ctx.fill();
-        s.x += s.dx;
-        s.y += s.dy;
-        if (s.x < 0 || s.x > canvas.width) s.dx *= -1;
-        if (s.y < 0 || s.y > canvas.height) s.dy *= -1;
+        p.x += p.dx;
+        p.y += p.dy;
+        if (p.x < 0 || p.x > canvas.width) p.dx *= -1;
+        if (p.y < 0 || p.y > canvas.height) p.dy *= -1;
       });
-      requestAnimationFrame(drawStars);
+      requestAnimationFrame(animate);
     }
-    drawStars();
+    animate();
 
-    // 关于我按钮
-    const aboutBtn = document.getElementById('aboutBtn');
-    const aboutSection = document.getElementById('aboutSection');
-    aboutBtn.addEventListener('click', () => {
-      aboutSection.classList.toggle('show');
-      aboutBtn.textContent = aboutSection.classList.contains('show') ? '收起' : '关于我';
+    // 添加飞翔的鹦鹉
+    function addFlyingParrot() {
+      const parrot = document.createElement('div');
+      parrot.className = 'flying-parrot';
+      parrot.textContent = '🦜';
+      parrot.style.top = Math.random() * 30 + 10 + '%';
+      document.body.appendChild(parrot);
+      setTimeout(() => parrot.remove(), 15000);
+    }
+    setInterval(addFlyingParrot, 30000);
+
+    // 鹦鹉数据管理
+    let parrots = JSON.parse(localStorage.getItem('parrots') || '[]');
+
+    // 保存数据
+    function saveParrots() {
+      localStorage.setItem('parrots', JSON.stringify(parrots));
+      renderParrots();
+      updateStats();
+    }
+
+    // 渲染鹦鹉卡片
+    function renderParrots() {
+      const grid = document.getElementById('parrots-grid');
+      if (parrots.length === 0) {
+        grid.innerHTML = `
+          <div class="empty-state" style="grid-column: 1/-1;">
+            <i class="fas fa-dove"></i>
+            <h3>还没有鹦鹉哦~</h3>
+            <p>去管理面板添加第一只鹦鹉吧！</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = parrots.map((p, index) => `
+        <div class="parrot-card" id="parrot-${index}">
+          <div class="days-badge">
+            <i class="fas fa-clock"></i> ${p.days} 天
+          </div>
+          <button class="video-toggle" onclick="toggleVideo(${index})">
+            <i class="fas fa-play"></i>
+          </button>
+          <div class="parrot-image-container">
+            <img src="${p.image}" alt="${p.name}" class="parrot-image">
+            ${p.video ? `<video src="${p.video}" class="parrot-video" loop muted></video>` : ''}
+          </div>
+          <div class="parrot-info">
+            <div class="parrot-name">
+              <i class="fas fa-feather"></i> ${p.name}
+            </div>
+            <div class="parrot-details">
+              <div class="detail-item">
+                <div class="icon"><i class="fas fa-calendar-alt"></i></div>
+                <div class="value">${p.days}</div>
+                <div class="label">手养天数</div>
+              </div>
+              <div class="detail-item">
+                <div class="icon"><i class="fas fa-heart"></i></div>
+                <div class="value">${p.video ? '有视频' : '照片'}</div>
+                <div class="label">媒体类型</div>
+              </div>
+            </div>
+            ${p.desc ? `<p style="color: #aaa; margin-bottom: 10px;">${p.desc}</p>` : ''}
+            <div class="parrot-price">${p.price}</div>
+          </div>
+          <button class="delete-btn" onclick="deleteParrot(${index})">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    // 切换视频/图片
+    function toggleVideo(index) {
+      const card = document.getElementById(`parrot-${index}`);
+      const video = card.querySelector('.parrot-video');
+      if (video) {
+        card.classList.toggle('video-mode');
+        if (card.classList.contains('video-mode')) {
+          video.play();
+        } else {
+          video.pause();
+        }
+      }
+    }
+
+    // 删除鹦鹉
+    function deleteParrot(index) {
+      if (confirm(`确定要删除 "${parrots[index].name}" 吗？`)) {
+        parrots.splice(index, 1);
+        saveParrots();
+      }
+    }
+
+    // 更新统计
+    function updateStats() {
+      document.getElementById('total-parrots').textContent = parrots.length;
+      
+      if (parrots.length > 0) {
+        const totalDays = parrots.reduce((sum, p) => sum + parseInt(p.days), 0);
+        const totalPrice = parrots.reduce((sum, p) => sum + parseInt(p.price), 0);
+        document.getElementById('avg-days').textContent = Math.round(totalDays / parrots.length);
+        document.getElementById('total-value').textContent = totalPrice.toLocaleString();
+      } else {
+        document.getElementById('avg-days').textContent = '0';
+        document.getElementById('total-value').textContent = '0';
+      }
+    }
+
+    // 图片预览
+    function previewImage(input) {
+      const preview = document.getElementById('image-preview');
+      preview.innerHTML = '';
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = document.createElement('img');
+          img.src = e.target.result;
+          preview.appendChild(img);
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+
+    // 表单提交
+    document.getElementById('parrot-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const name = document.getElementById('parrot-name').value;
+      const price = document.getElementById('parrot-price').value;
+      const days = document.getElementById('parrot-days').value;
+      const desc = document.getElementById('parrot-desc').value;
+      const imageFile = document.getElementById('parrot-image').files[0];
+      const videoFile = document.getElementById('parrot-video').files[0];
+
+      // 转换图片为 base64
+      const imageToBase64 = (file) => {
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target.result);
+          reader.readAsDataURL(file);
+        });
+      };
+
+      const imageData = imageFile ? await imageToBase64(imageFile) : 'https://picsum.photos/400/300?random=' + Date.now();
+      
+      let videoData = null;
+      if (videoFile) {
+        videoData = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target.result);
+          reader.readAsDataURL(videoFile);
+        });
+      }
+
+      parrots.push({
+        name,
+        price: parseInt(price),
+        days: parseInt(days),
+        desc,
+        image: imageData,
+        video: videoData
+      });
+
+      saveParrots();
+      
+      // 重置表单
+      this.reset();
+      document.getElementById('image-preview').innerHTML = '';
+      
+      alert(`🎉 ${name} 已成功添加！`);
+      showSection('home');
     });
 
+    // 切换页面
+    function showSection(section) {
+      const homeSection = document.getElementById('home-section');
+      const adminSection = document.getElementById('admin-section');
+      const navBtns = document.querySelectorAll('.nav-btn');
+
+      if (section === 'home') {
+        homeSection.style.display = 'block';
+        adminSection.classList.remove('show');
+        navBtns[0].classList.add('active');
+        navBtns[1].classList.remove('active');
+      } else {
+        homeSection.style.display = 'none';
+        adminSection.classList.add('show');
+        navBtns[0].classList.remove('active');
+        navBtns[1].classList.add('active');
+      }
+    }
+
+    // 初始化
+    renderParrots();
+    updateStats();
+
+    // 窗口大小调整
     window.addEventListener('resize', () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
