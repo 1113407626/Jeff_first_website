@@ -833,16 +833,25 @@
 
     try {
       if (SUPABASE_ANON_KEY && SUPABASE_ANON_KEY.length > 20 && !SUPABASE_ANON_KEY.includes('YOUR_')) {
-        // 修复：移除这里的 let 关键字
         sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         isSupabaseConfigured = true;
+        
+        // 隐藏配置提示，显示登录界面
         const configNotice = document.getElementById('config-notice');
         if (configNotice) configNotice.style.display = 'none';
+        
+        const adminLogin = document.getElementById('admin-login');
+        if (adminLogin) adminLogin.style.display = 'block';
+        
         const connStatus = document.getElementById('connection-status');
         if (connStatus) {
           connStatus.className = 'status-badge connected';
           connStatus.innerHTML = '<i class="fas fa-check-circle"></i> 已连接';
         }
+      } else {
+        // 未配置时显示配置提示
+        const adminLogin = document.getElementById('admin-login');
+        if (adminLogin) adminLogin.style.display = 'none';
       }
     } catch (e) {
       console.error('Supabase 初始化失败:', e);
