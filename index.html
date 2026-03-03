@@ -1015,15 +1015,31 @@
       return true;
     }
 
-    // 编辑鹦鹉
+    // 编辑鹦鹉（需要先验证密码）
+    let pendingEditId = null;
+
+    function requestEditParrot(id) {
+      pendingEditId = id;
+      // 切换到管理面板，显示登录界面
+      showSection('admin');
+      document.getElementById('admin-password').focus();
+      showToast('🔒 请先验证管理员密码', 'info');
+    }
+
     function editParrot(id) {
       const parrot = parrots.find(p => p.id === id);
       if (!parrot) return;
 
+      // 计算实际天数（从创建日期到今天）
+      const createdDate = parrot.created_at ? new Date(parrot.created_at) : new Date();
+      const today = new Date();
+      const daysDiff = Math.floor((today - createdDate) / (1000 * 60 * 60 * 24));
+      const actualDays = Math.max(parrot.days, daysDiff);
+
       // 填充表单
       document.getElementById('parrot-name').value = parrot.name;
       document.getElementById('parrot-price').value = parrot.price;
-      document.getElementById('parrot-days').value = parrot.days;
+      document.getElementById('parrot-days').value = actualDays;
       document.getElementById('parrot-desc').value = parrot.description || '';
       document.getElementById('edit-parrot-id').value = id;
 
@@ -1031,8 +1047,7 @@
       const preview = document.getElementById('image-preview');
       preview.innerHTML = `<img src="${parrot.image}" alt="${parrot.name}">`;
 
-      // 切换到管理面板
-      showSection('admin');
+      // 显示编辑界面
       document.getElementById('admin-login').style.display = 'none';
       document.getElementById('admin-form-container').style.display = 'block';
       document.getElementById('admin-stats').style.display = 'block';
@@ -1086,10 +1101,17 @@
         return;
       }
 
-      grid.innerHTML = parrots.map(p => `
+      grid.innerHTML = parrots.map(p => {
+        // 计算实际天数（从创建日期到今天）
+        const createdDate = p.created_at ? new Date(p.created_at) : new Date();
+        const today = new Date();
+        const daysDiff = Math.floor((today - createdDate) / (1000 * 60 * 60 * 24));
+        const actualDays = Math.max(p.days, daysDiff);
+        
+        return `
         <div class="parrot-card">
           <div class="days-badge">
-            <i class="fas fa-clock"></i> ${p.days} 天
+            <i class="fas fa-clock"></i> ${actualDays} 天
           </div>
           <button class="video-toggle" onclick="toggleVideo(this)">
             <i class="fas fa-play"></i>
@@ -1117,14 +1139,15 @@
             ${p.description ? `<p style="color: #aaa; margin-bottom: 10px;">${p.description}</p>` : ''}
             <div class="parrot-price">${p.price}</div>
           </div>
-          <button class="delete-btn" onclick="deleteParrot('${p.id}')" style="right: 50px;">
-            <i class="fas fa-trash"></i>
-          </button>
-          <button class="delete-btn" onclick="editParrot('${p.id}')" style="background: rgba(255, 165, 0, 0.8); border-color: #ffa500;">
+          <button class="delete-btn" onclick="requestEditParrot('${p.id}')" style="right: 50px; background: rgba(255, 165, 0, 0.8); border-color: #ffa500;">
             <i class="fas fa-edit"></i>
           </button>
+          <button class="delete-btn" onclick="deleteParrot('${p.id}')" style="background: rgba(255, 0, 0, 0.8); border-color: #ff0000;">
+            <i class="fas fa-trash"></i>
+          </button>
         </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
     // 切换视频/图片
@@ -1149,8 +1172,16 @@
       document.getElementById('total-parrots').textContent = parrots.length;
       
       if (parrots.length > 0) {
-        const totalDays = parrots.reduce((sum, p) => sum + parseInt(p.days || 0), 0);
         const totalPrice = parrots.reduce((sum, p) => sum + parseInt(p.price || 0), 0);
+        
+        // 计算实际天数（考虑创建日期）
+        const totalDays = parrots.reduce((sum, p) => {
+          const createdDate = p.created_at ? new Date(p.created_at) : new Date();
+          const today = new Date();
+          const daysDiff = Math.floor((today - createdDate) / (1000 * 60 * 60 * 24));
+          return sum + Math.max(parseInt(p.days || 0), daysDiff);
+        }, 0);
+        
         const avgDays = Math.round(totalDays / parrots.length);
         
         // 管理员面板统计
@@ -1315,9 +1346,16 @@
         document.getElementById('admin-stats').style.display = 'block';
         document.getElementById('admin-password').value = '';
         showToast('✅ 验证成功！', 'success');
+        
+        // 如果有待处理的编辑请求，执行编辑
+        if (pendingEditId) {
+          editParrot(pendingEditId);
+          pendingEditId = null;
+        }
       } else {
         showToast('❌ 密码错误！', 'error');
         document.getElementById('admin-password').value = '';
+        pendingEditId = null;
       }
     }
 
