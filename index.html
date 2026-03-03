@@ -799,18 +799,18 @@
 
           <div class="form-group">
             <label><i class="fas fa-image"></i> 鹦鹉照片</label>
-            <input type="file" id="parrot-image" accept="image/*" onchange="previewImage(this)">
+            <input type="file" id="parrot-image" accept="image/jpeg,image/jpg,image/png,image/*" onchange="previewImage(this)">
             <div class="file-preview" id="image-preview"></div>
             <p style="color: #888; font-size: 0.85em; margin-top: 8px;">
-              <i class="fas fa-info-circle"></i> 建议：图片小于 500KB，会自动压缩
+              <i class="fas fa-info-circle"></i> 建议：JPEG 格式，小于 1MB，会自动压缩到 800x600
             </p>
           </div>
 
           <div class="form-group">
             <label><i class="fas fa-video"></i> 鹦鹉视频 (可选)</label>
-            <input type="file" id="parrot-video" accept="video/mp4,video/x-m4v,video/*">
+            <input type="file" id="parrot-video" accept="video/mp4,video/x-m4v,video/quicktime,video/*">
             <p style="color: #888; font-size: 0.85em; margin-top: 8px;">
-              <i class="fas fa-info-circle"></i> 建议：MP4 格式，小于 2MB
+              <i class="fas fa-info-circle"></i> 支持：MP4、MOV 等格式，小于 5MB
             </p>
           </div>
 
@@ -1118,7 +1118,7 @@
           </button>
           <div class="parrot-image-container">
             <img src="${p.image}" alt="${p.name}" class="parrot-image">
-            ${p.video ? `<video src="${p.video}" class="parrot-video" loop muted playsinline webkit-playsinline></video>` : ''}
+            ${p.video ? `<video src="${p.video}" class="parrot-video" loop muted playsinline webkit-playsinline controls preload="metadata"></video>` : ''}
           </div>
           <div class="parrot-info">
             <div class="parrot-name">
@@ -1157,9 +1157,16 @@
       if (video) {
         card.classList.toggle('video-mode');
         if (card.classList.contains('video-mode')) {
+          // 尝试播放，处理各种格式
           video.play().catch(e => {
             console.error('视频播放失败:', e);
-            showToast('❌ 视频格式不支持，请上传 MP4 格式', 'error');
+            // 如果是 MOV 格式，提示可能需要转码
+            const videoSrc = video.src;
+            if (videoSrc.includes('video/quicktime') || videoSrc.toLowerCase().includes('.mov')) {
+              showToast('⚠️ MOV 格式可能需要转码为 MP4 以获得更好兼容性', 'info');
+            } else {
+              showToast('❌ 视频格式不支持，建议上传 MP4 格式', 'error');
+            }
           });
         } else {
           video.pause();
@@ -1233,7 +1240,19 @@
             canvas.height = height;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
-            resolve(canvas.toDataURL('image/jpeg', quality));
+            
+            // 转换为 JPEG 并压缩
+            let compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+            
+            // 如果还是太大，继续降低质量
+            let currentQuality = quality;
+            while (compressedDataUrl.length > 1024 * 1024 && currentQuality > 0.3) {
+              // 1MB 限制
+              currentQuality -= 0.1;
+              compressedDataUrl = canvas.toDataURL('image/jpeg', currentQuality);
+            }
+            
+            resolve(compressedDataUrl);
           };
           img.src = e.target.result;
         };
@@ -1257,8 +1276,8 @@
       const videoFile = document.getElementById('parrot-video').files[0];
 
       // 检查文件大小
-      const MAX_IMAGE_SIZE = 500 * 1024; // 500KB
-      const MAX_VIDEO_SIZE = 2 * 1024 * 1024; // 2MB
+      const MAX_IMAGE_SIZE = 1024 * 1024; // 1MB
+      const MAX_VIDEO_SIZE = 5 * 1024 * 1024; // 5MB
 
       if (imageFile && imageFile.size > MAX_IMAGE_SIZE) {
         showToast(`❌ 图片太大！请上传小于 ${MAX_IMAGE_SIZE/1024}KB 的图片`, 'error');
@@ -1364,7 +1383,9 @@
       sessionStorage.removeItem('adminLoggedIn');
       document.getElementById('admin-login').style.display = 'block';
       document.getElementById('admin-form-container').style.display = 'none';
+      document.getElementById('admin-stats').style.display = 'none';
       document.getElementById('admin-password').value = '';
+      pendingEditId = null;
     }
 
     // 检查登录状态
