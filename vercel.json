@@ -1,10 +1,9 @@
 {
-  "name": "jeff-first-website",
+  "name": "jeff-parrot-website",
   "buildCommand": null,
   "outputDirectory": ".",
   "devCommand": null,
   "installCommand": null,
-  "framework": "static",
   "rewrites": [
     {
       "source": "/(.*)",
