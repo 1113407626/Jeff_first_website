@@ -763,6 +763,7 @@
 
     try {
       if (SUPABASE_ANON_KEY && SUPABASE_ANON_KEY.length > 20 && !SUPABASE_ANON_KEY.includes('YOUR_')) {
+        // 修复：移除这里的 let 关键字
         supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         isSupabaseConfigured = true;
         const configNotice = document.getElementById('config-notice');
