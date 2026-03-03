@@ -753,7 +753,7 @@
     // 🔧 Supabase 配置 - 请替换为你的配置！
     // ============================================
     const SUPABASE_URL = 'https://nxiwatmgedlvzlxmgyhw.supabase.co';
-    const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY_HERE';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im54aXdhdG1nZWRsdnpseG1neWh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0OTI2NDgsImV4cCI6MjA4ODA2ODY0OH0.5VBRX8bZkrUiw1DL5Y9bpkMtC-0RVdaoFLEdqWXS2c4';
 
     // ============================================
     // 初始化 Supabase
@@ -762,12 +762,16 @@
     let isSupabaseConfigured = false;
 
     try {
-      if (SUPABASE_ANON_KEY !== 'YOUR_ANON_KEY_HERE' && SUPABASE_ANON_KEY.length > 20) {
+      if (SUPABASE_ANON_KEY && SUPABASE_ANON_KEY.length > 20 && !SUPABASE_ANON_KEY.includes('YOUR_')) {
         supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         isSupabaseConfigured = true;
-        document.getElementById('config-notice').style.display = 'none';
-        document.getElementById('connection-status').className = 'status-badge connected';
-        document.getElementById('connection-status').innerHTML = '<i class="fas fa-check-circle"></i> 已连接';
+        const configNotice = document.getElementById('config-notice');
+        if (configNotice) configNotice.style.display = 'none';
+        const connStatus = document.getElementById('connection-status');
+        if (connStatus) {
+          connStatus.className = 'status-badge connected';
+          connStatus.innerHTML = '<i class="fas fa-check-circle"></i> 已连接';
+        }
       }
     } catch (e) {
       console.error('Supabase 初始化失败:', e);
