@@ -340,6 +340,17 @@
 
     .admin-panel.show { display: block; }
 
+    /* 登录界面 */
+    #admin-login {
+      text-align: center;
+      padding: 30px 0;
+    }
+
+    #admin-login input {
+      max-width: 300px;
+      margin: 0 auto 20px;
+    }
+
     .admin-title {
       font-size: 1.8em;
       color: #00ffff;
@@ -403,6 +414,12 @@
       box-shadow: 0 0 30px rgba(0, 255, 255, 0.6);
     }
 
+    .submit-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
     .file-preview {
       margin-top: 10px;
       display: flex;
@@ -457,6 +474,23 @@
       color: #333;
     }
 
+    /* 加载状态 */
+    .loading {
+      text-align: center;
+      padding: 50px;
+    }
+
+    .loading i {
+      font-size: 3em;
+      color: #00ffff;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
     /* 响应式 */
     @media (max-width: 768px) {
       .navbar {
@@ -500,6 +534,35 @@
         top: 30%;
         transform: scaleX(-1);
       }
+    }
+
+    /* Firebase 配置提示 */
+    .firebase-notice {
+      background: rgba(255, 165, 0, 0.2);
+      border: 2px solid orange;
+      border-radius: 15px;
+      padding: 20px;
+      margin: 20px auto;
+      max-width: 600px;
+      text-align: center;
+    }
+
+    .firebase-notice h3 {
+      color: orange;
+      margin-bottom: 10px;
+    }
+
+    .firebase-notice p {
+      color: #ccc;
+      font-size: 0.9em;
+      line-height: 1.6;
+    }
+
+    .firebase-notice code {
+      background: rgba(0, 0, 0, 0.5);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #00ffff;
     }
   </style>
 </head>
@@ -553,15 +616,27 @@
           <i class="fas fa-crow"></i> 在家的鹦鹉宝贝们
         </h2>
         <div class="parrots-grid" id="parrots-grid">
-          <!-- 鹦鹉卡片将在这里动态生成 -->
+          <div class="loading" style="grid-column: 1/-1;">
+            <i class="fas fa-spinner"></i>
+            <p>正在加载鹦鹉数据...</p>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- 管理面板 -->
     <div id="admin-section" class="admin-panel">
+      <!-- Firebase 配置提示 -->
+      <div id="firebase-notice" class="firebase-notice">
+        <h3><i class="fas fa-exclamation-triangle"></i> 需要配置 Firebase</h3>
+        <p>
+          请按照 <code>README.md</code> 中的步骤创建 Firebase 项目并配置密钥。<br>
+          配置完成后刷新页面即可使用。
+        </p>
+      </div>
+
       <!-- 登录界面 -->
-      <div id="admin-login">
+      <div id="admin-login" style="display: none;">
         <h2 class="admin-title">
           <i class="fas fa-lock"></i> 管理员登录
         </h2>
@@ -588,47 +663,80 @@
           <i class="fas fa-plus-circle"></i> 添加新鹦鹉
         </h2>
         <form id="parrot-form">
-        <div class="form-group">
-          <label><i class="fas fa-tag"></i> 鹦鹉名字</label>
-          <input type="text" id="parrot-name" placeholder="例如：小绿、彩虹、豆豆" required>
-        </div>
-
-        <div class="form-row">
           <div class="form-group">
-            <label><i class="fas fa-money-bill"></i> 价格 (元)</label>
-            <input type="number" id="parrot-price" placeholder="例如：1500" required>
+            <label><i class="fas fa-tag"></i> 鹦鹉名字</label>
+            <input type="text" id="parrot-name" placeholder="例如：小绿、彩虹、豆豆" required>
           </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label><i class="fas fa-money-bill"></i> 价格 (元)</label>
+              <input type="number" id="parrot-price" placeholder="例如：1500" required>
+            </div>
+            <div class="form-group">
+              <label><i class="fas fa-calendar"></i> 手养天数</label>
+              <input type="number" id="parrot-days" placeholder="例如：45" required>
+            </div>
+          </div>
+
           <div class="form-group">
-            <label><i class="fas fa-calendar"></i> 手养天数</label>
-            <input type="number" id="parrot-days" placeholder="例如：45" required>
+            <label><i class="fas fa-image"></i> 鹦鹉照片</label>
+            <input type="file" id="parrot-image" accept="image/*" onchange="previewImage(this)">
+            <div class="file-preview" id="image-preview"></div>
           </div>
-        </div>
 
-        <div class="form-group">
-          <label><i class="fas fa-image"></i> 鹦鹉照片</label>
-          <input type="file" id="parrot-image" accept="image/*" onchange="previewImage(this)">
-          <div class="file-preview" id="image-preview"></div>
-        </div>
+          <div class="form-group">
+            <label><i class="fas fa-video"></i> 鹦鹉视频 (可选)</label>
+            <input type="file" id="parrot-video" accept="video/*">
+          </div>
 
-        <div class="form-group">
-          <label><i class="fas fa-video"></i> 鹦鹉视频 (可选)</label>
-          <input type="file" id="parrot-video" accept="video/*">
-        </div>
+          <div class="form-group">
+            <label><i class="fas fa-align-left"></i> 描述 (可选)</label>
+            <textarea id="parrot-desc" rows="3" placeholder="介绍一下这只鹦鹉的特点..."></textarea>
+          </div>
 
-        <div class="form-group">
-          <label><i class="fas fa-align-left"></i> 描述 (可选)</label>
-          <textarea id="parrot-desc" rows="3" placeholder="介绍一下这只鹦鹉的特点..."></textarea>
-        </div>
-
-        <button type="submit" class="submit-btn">
-          <i class="fas fa-save"></i> 保存鹦鹉信息
-        </button>
-      </form>
+          <button type="submit" class="submit-btn" id="submit-btn">
+            <i class="fas fa-save"></i> 保存鹦鹉信息
+          </button>
+        </form>
       </div>
     </div>
   </div>
 
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
   <script>
+    // ============================================
+    // 🔧 Firebase 配置 - 请替换为你的配置！
+    // ============================================
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    // ============================================
+    // 初始化 Firebase
+    // ============================================
+    let db = null;
+    let isFirebaseConfigured = false;
+
+    try {
+      if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+        isFirebaseConfigured = true;
+        document.getElementById('firebase-notice').style.display = 'none';
+      }
+    } catch (e) {
+      console.error('Firebase 初始化失败:', e);
+    }
+
     // 动态背景
     const canvas = document.getElementById('bg-canvas');
     const ctx = canvas.getContext('2d');
@@ -675,13 +783,75 @@
     setInterval(addFlyingParrot, 30000);
 
     // 鹦鹉数据管理
-    let parrots = JSON.parse(localStorage.getItem('parrots') || '[]');
+    let parrots = [];
 
-    // 保存数据
-    function saveParrots() {
-      localStorage.setItem('parrots', JSON.stringify(parrots));
-      renderParrots();
-      updateStats();
+    // 从 Firebase 加载数据
+    function loadParrots() {
+      if (!isFirebaseConfigured) {
+        document.getElementById('parrots-grid').innerHTML = `
+          <div class="empty-state" style="grid-column: 1/-1;">
+            <i class="fas fa-database"></i>
+            <h3>Firebase 未配置</h3>
+            <p>请按照 README.md 配置 Firebase 后刷新页面</p>
+          </div>
+        `;
+        return;
+      }
+
+      db.collection('parrots').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+        parrots = [];
+        snapshot.forEach(doc => {
+          parrots.push({ id: doc.id, ...doc.data() });
+        });
+        renderParrots();
+        updateStats();
+      }, error => {
+        console.error('加载数据失败:', error);
+        document.getElementById('parrots-grid').innerHTML = `
+          <div class="empty-state" style="grid-column: 1/-1;">
+            <i class="fas fa-exclamation-circle"></i>
+            <h3>加载失败</h3>
+            <p>请检查 Firebase 配置和网络连接</p>
+          </div>
+        `;
+      });
+    }
+
+    // 保存数据到 Firebase
+    async function saveParrotToFirebase(parrot) {
+      if (!isFirebaseConfigured) {
+        alert('Firebase 未配置，无法保存数据！');
+        return false;
+      }
+
+      try {
+        await db.collection('parrots').add({
+          ...parrot,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        return true;
+      } catch (e) {
+        console.error('保存失败:', e);
+        alert('保存失败：' + e.message);
+        return false;
+      }
+    }
+
+    // 删除鹦鹉
+    async function deleteParrot(id) {
+      if (!confirm('确定要删除这只鹦鹉吗？')) return;
+
+      if (!isFirebaseConfigured) {
+        alert('Firebase 未配置，无法删除！');
+        return;
+      }
+
+      try {
+        await db.collection('parrots').doc(id).delete();
+      } catch (e) {
+        console.error('删除失败:', e);
+        alert('删除失败：' + e.message);
+      }
     }
 
     // 渲染鹦鹉卡片
@@ -698,12 +868,12 @@
         return;
       }
 
-      grid.innerHTML = parrots.map((p, index) => `
-        <div class="parrot-card" id="parrot-${index}">
+      grid.innerHTML = parrots.map(p => `
+        <div class="parrot-card">
           <div class="days-badge">
             <i class="fas fa-clock"></i> ${p.days} 天
           </div>
-          <button class="video-toggle" onclick="toggleVideo(${index})">
+          <button class="video-toggle" onclick="toggleVideo(this)">
             <i class="fas fa-play"></i>
           </button>
           <div class="parrot-image-container">
@@ -729,7 +899,7 @@
             ${p.desc ? `<p style="color: #aaa; margin-bottom: 10px;">${p.desc}</p>` : ''}
             <div class="parrot-price">${p.price}</div>
           </div>
-          <button class="delete-btn" onclick="deleteParrot(${index})">
+          <button class="delete-btn" onclick="deleteParrot('${p.id}')">
             <i class="fas fa-trash"></i>
           </button>
         </div>
@@ -737,8 +907,8 @@
     }
 
     // 切换视频/图片
-    function toggleVideo(index) {
-      const card = document.getElementById(`parrot-${index}`);
+    function toggleVideo(btn) {
+      const card = btn.closest('.parrot-card');
       const video = card.querySelector('.parrot-video');
       if (video) {
         card.classList.toggle('video-mode');
@@ -750,21 +920,13 @@
       }
     }
 
-    // 删除鹦鹉
-    function deleteParrot(index) {
-      if (confirm(`确定要删除 "${parrots[index].name}" 吗？`)) {
-        parrots.splice(index, 1);
-        saveParrots();
-      }
-    }
-
     // 更新统计
     function updateStats() {
       document.getElementById('total-parrots').textContent = parrots.length;
       
       if (parrots.length > 0) {
-        const totalDays = parrots.reduce((sum, p) => sum + parseInt(p.days), 0);
-        const totalPrice = parrots.reduce((sum, p) => sum + parseInt(p.price), 0);
+        const totalDays = parrots.reduce((sum, p) => sum + parseInt(p.days || 0), 0);
+        const totalPrice = parrots.reduce((sum, p) => sum + parseInt(p.price || 0), 0);
         document.getElementById('avg-days').textContent = Math.round(totalDays / parrots.length);
         document.getElementById('total-value').textContent = totalPrice.toLocaleString();
       } else {
@@ -791,6 +953,10 @@
     // 表单提交
     document.getElementById('parrot-form').addEventListener('submit', async function(e) {
       e.preventDefault();
+
+      const btn = document.getElementById('submit-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 保存中...';
 
       const name = document.getElementById('parrot-name').value;
       const price = document.getElementById('parrot-price').value;
@@ -819,7 +985,7 @@
         });
       }
 
-      parrots.push({
+      const success = await saveParrotToFirebase({
         name,
         price: parseInt(price),
         days: parseInt(days),
@@ -828,17 +994,19 @@
         video: videoData
       });
 
-      saveParrots();
-      
-      // 重置表单
-      this.reset();
-      document.getElementById('image-preview').innerHTML = '';
-      
-      alert(`🎉 ${name} 已成功添加！`);
-      showSection('home');
+      if (success) {
+        // 重置表单
+        this.reset();
+        document.getElementById('image-preview').innerHTML = '';
+        alert(`🎉 ${name} 已成功添加到云端！`);
+        showSection('home');
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-save"></i> 保存鹦鹉信息';
     });
 
-    // 管理员密码（请修改为你的密码！）
+    // 管理员密码
     const ADMIN_PASSWORD = '1113407626';
 
     // 检查密码
@@ -891,8 +1059,11 @@
     }
 
     // 初始化
-    renderParrots();
-    updateStats();
+    if (isFirebaseConfigured) {
+      loadParrots();
+    } else {
+      updateStats();
+    }
 
     // 窗口大小调整
     window.addEventListener('resize', () => {
