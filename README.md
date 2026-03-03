@@ -1,10 +1,10 @@
 # 🦜 手养鹦鹉之家
 
-一个超酷炫的鹦鹉展示与管理网站，**数据存储在云端**，所有人访问看到相同数据！
+一个超酷炫的鹦鹉展示与管理网站，**数据存储在 Supabase 云端**，所有人访问看到相同数据！
 
 ## ✨ 功能特点
 
-- ☁️ **云端存储** - 使用 Firebase 数据库，数据永久保存
+- ☁️ **Supabase 云端存储** - 免费、快速、国内访问友好
 - 🔄 **实时同步** - 添加/删除鹦鹉后，所有人立即看到更新
 - 🎨 **酷炫视觉效果** - 流动星光背景 + 霓虹配色
 - 🦜 **鹦鹉卡片展示** - 图片/视频、价格、手养天数一目了然
@@ -13,80 +13,53 @@
 - 🔐 **密码保护** - 管理员密码验证，防止误操作
 - 💾 **自动保存** - 数据实时同步到云端
 
-## 🚀 快速启动
+## 🚀 快速配置（3 步完成！）
 
-### 步骤 1: 创建 Firebase 项目（必须！）
+### 第 1 步：创建数据表
 
-1. 访问 [Firebase 控制台](https://console.firebase.google.com/)
-2. 点击「添加项目」
-3. 输入项目名称（如：parrot-home）
-4. 启用 Google Analytics（可选）
-5. 点击「创建项目」
+在你的 Supabase 项目：https://supabase.com/dashboard/project/nxiwatmgedlvzlxmgyhw
 
-### 步骤 2: 创建 Firestore 数据库
+1. 左侧菜单 → **Table Editor**
+2. 点击 **New table**
+3. 表名输入：`parrots`
+4. 取消勾选 "Enable Row Level Security"（简单模式）
+5. 点击 **Save**
 
-1. 在 Firebase 控制台，点击左侧「构建」→「Firestore Database」
-2. 点击「创建数据库」
-3. 选择**测试模式**（允许读写）
-4. 选择位置（建议选亚洲附近，如 asia-east1）
-5. 点击「启用」
+然后添加以下列（点击 **Add column**）：
 
-### 步骤 3: 获取 Firebase 配置
+| 列名 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `name` | text | - | 鹦鹉名字 |
+| `price` | int8 | - | 价格（元） |
+| `days` | int8 | - | 手养天数 |
+| `desc` | text | - | 描述（可选） |
+| `image` | text | - | 图片 base64 |
+| `video` | text | - | 视频 base64（可选） |
 
-1. 在 Firebase 控制台，点击项目概览页面的「</>」图标（Web 应用）
-2. 输入应用名称（如：parrot-home-web）
-3. 点击「注册应用」
-4. **复制 Firebase 配置代码**（看起来像下面的 JSON）
+> 💡 `id` 和 `created_at` 会自动创建，不用手动添加！
 
-```javascript
-const firebaseConfig = {
-  apiKey: "AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-  authDomain: "your-project.firebaseapp.com",
-  projectId: "your-project",
-  storageBucket: "your-project.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "1:123456789:web:abcdef123456"
-};
-```
+### 第 2 步：获取 API 密钥
 
-### 步骤 4: 配置到代码中
+1. 左侧菜单 → **Settings** (左下角齿轮图标)
+2. 点击 **API**
+3. 复制以下两个值：
+   - **Project URL**: `https://nxiwatmgedlvzlxmgyhw.supabase.co`
+   - **anon public**: 以 `eyJ` 开头的长字符串
 
-1. 打开 `index.html`
-2. 搜索 `firebaseConfig`（大约在第 450 行）
-3. 替换配置为你刚才复制的内容
+### 第 3 步：配置到代码中
+
+1. 打开 `index.html` 文件
+2. 搜索 `SUPABASE_URL` 和 `SUPABASE_ANON_KEY`（约第 450 行）
+3. 替换为你的配置：
 
 ```javascript
-const firebaseConfig = {
-  apiKey: "你的 API_KEY",
-  authDomain: "你的项目 ID.firebaseapp.com",
-  projectId: "你的项目 ID",
-  storageBucket: "你的项目 ID.appspot.com",
-  messagingSenderId: "你的发送者 ID",
-  appId: "你的应用 ID"
-};
+const SUPABASE_URL = 'https://nxiwatmgedlvzlxmgyhw.supabase.co';
+const SUPABASE_ANON_KEY = '你刚才复制的 anon key';
 ```
 
-### 步骤 5: 设置 Firestore 安全规则（重要！）
+4. 保存文件
 
-1. 在 Firebase 控制台，进入「Firestore Database」
-2. 点击「规则」标签
-3. 替换为以下规则：
-
-```
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /parrots/{document=**} {
-      allow read: if true;  // 所有人可读
-      allow write: if true; // 所有人可写（简单模式）
-    }
-  }
-}
-```
-
-4. 点击「发布」
-
-### 步骤 6: 本地测试
+## 🌐 本地测试
 
 ```bash
 cd /home/jeffhuang/Jeff_first_website
@@ -95,11 +68,13 @@ cd /home/jeffhuang/Jeff_first_website
 
 访问：http://localhost:8080
 
-### 步骤 7: 推送到 GitHub
+如果配置正确，管理面板会显示 **🟢 已连接** 状态！
+
+## 📦 推送到 GitHub
 
 ```bash
 git add -A
-git commit -m "配置 Firebase 云端存储"
+git commit -m "配置 Supabase 云端数据库"
 git push origin main
 ```
 
@@ -119,12 +94,13 @@ GitHub Pages 会自动更新：https://1113407626.github.io/Jeff_first_website/
    - 上传视频（可选）
    - 描述（可选）
 4. 点击「保存鹦鹉信息」
-5. ✅ 数据自动保存到云端！
+5. ✅ 数据自动保存到 Supabase 云端！
 
 ### 查看鹦鹉
 
 - 首页展示所有鹦鹉卡片
-- 数据实时从 Firebase 加载
+- 数据实时从 Supabase 加载
+- **实时同步** - 别人添加鹦鹉后，你刷新页面就能看到
 - 鼠标悬停卡片有炫酷动画
 - 点击视频按钮切换图片/视频
 - 悬停时显示删除按钮
@@ -144,23 +120,23 @@ GitHub Pages 会自动更新：https://1113407626.github.io/Jeff_first_website/
 
 ### 如需更高安全
 1. 修改 `index.html` 中的 `ADMIN_PASSWORD`
-2. 使用 Firebase Authentication（需要额外配置）
-3. 设置 Firestore 安全规则限制写入
+2. 启用 Supabase Row Level Security (RLS)
+3. 设置更复杂的权限规则
 
 ## 💡 提示
 
 - **数据在云端** - 换设备、换浏览器都能看到相同数据
 - **实时同步** - 你添加鹦鹉后，别人立刻能看到
-- **图片/视频存储** - 使用 base64 编码存到 Firestore
-- **免费额度** - Firebase 免费额度足够个人使用
-  - 读取：5 万/天
-  - 写入：2 万/天
-  - 存储：1GB
+- **图片/视频存储** - 使用 base64 编码存到 Supabase
+- **免费额度** - Supabase 免费套餐：
+  - 数据库：500MB
+  - 带宽：2GB/月
+  - 足够个人使用！
 
 ## 🛠️ 技术栈
 
 - HTML5 + CSS3 + JavaScript
-- **Firebase Firestore** - 云端数据库
+- **Supabase** - 云端数据库（PostgreSQL）
 - Canvas 动态背景
 - Font Awesome 图标
 
@@ -168,7 +144,7 @@ GitHub Pages 会自动更新：https://1113407626.github.io/Jeff_first_website/
 
 - **GitHub 源码**: https://github.com/1113407626/Jeff_first_website
 - **公网访问**: https://1113407626.github.io/Jeff_first_website/
-- **Firebase 控制台**: https://console.firebase.google.com/
+- **Supabase 控制台**: https://supabase.com/dashboard/project/nxiwatmgedlvzlxmgyhw
 
 ---
 

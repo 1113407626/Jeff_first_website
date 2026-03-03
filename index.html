@@ -536,8 +536,8 @@
       }
     }
 
-    /* Firebase 配置提示 */
-    .firebase-notice {
+    /* 配置提示 */
+    .config-notice {
       background: rgba(255, 165, 0, 0.2);
       border: 2px solid orange;
       border-radius: 15px;
@@ -547,22 +547,55 @@
       text-align: center;
     }
 
-    .firebase-notice h3 {
+    .config-notice h3 {
       color: orange;
       margin-bottom: 10px;
     }
 
-    .firebase-notice p {
+    .config-notice p {
       color: #ccc;
       font-size: 0.9em;
       line-height: 1.6;
     }
 
-    .firebase-notice code {
+    .config-notice code {
       background: rgba(0, 0, 0, 0.5);
       padding: 2px 6px;
       border-radius: 4px;
       color: #00ffff;
+      font-family: monospace;
+    }
+
+    .config-notice ol {
+      text-align: left;
+      margin-top: 15px;
+      padding-left: 20px;
+    }
+
+    .config-notice li {
+      margin-bottom: 8px;
+      color: #ddd;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-size: 0.9em;
+      font-weight: 700;
+      margin-top: 10px;
+    }
+
+    .status-badge.connected {
+      background: rgba(0, 255, 0, 0.2);
+      border: 2px solid #00ff00;
+      color: #00ff00;
+    }
+
+    .status-badge.disconnected {
+      background: rgba(255, 0, 0, 0.2);
+      border: 2px solid #ff0000;
+      color: #ff0000;
     }
   </style>
 </head>
@@ -626,13 +659,22 @@
 
     <!-- 管理面板 -->
     <div id="admin-section" class="admin-panel">
-      <!-- Firebase 配置提示 -->
-      <div id="firebase-notice" class="firebase-notice">
-        <h3><i class="fas fa-exclamation-triangle"></i> 需要配置 Firebase</h3>
-        <p>
-          请按照 <code>README.md</code> 中的步骤创建 Firebase 项目并配置密钥。<br>
-          配置完成后刷新页面即可使用。
+      <!-- Supabase 配置提示 -->
+      <div id="config-notice" class="config-notice">
+        <h3><i class="fas fa-exclamation-triangle"></i> 需要配置 Supabase</h3>
+        <p>请在 <code>index.html</code> 中配置你的 Supabase 项目信息：</p>
+        <ol>
+          <li>打开 <code>index.html</code> 文件</li>
+          <li>找到 <code>SUPABASE_URL</code> 和 <code>SUPABASE_ANON_KEY</code></li>
+          <li>替换为你的项目配置</li>
+        </ol>
+        <p style="margin-top: 15px;">
+          <strong>获取配置：</strong><br>
+          Supabase Dashboard → Settings → API
         </p>
+        <div id="connection-status" class="status-badge disconnected">
+          <i class="fas fa-times-circle"></i> 未连接
+        </div>
       </div>
 
       <!-- 登录界面 -->
@@ -703,38 +745,32 @@
     </div>
   </div>
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <!-- Supabase JS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script>
     // ============================================
-    // 🔧 Firebase 配置 - 请替换为你的配置！
+    // 🔧 Supabase 配置 - 请替换为你的配置！
     // ============================================
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT_ID.appspot.com",
-      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-      appId: "YOUR_APP_ID"
-    };
+    const SUPABASE_URL = 'https://nxiwatmgedlvzlxmgyhw.supabase.co';
+    const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY_HERE';
 
     // ============================================
-    // 初始化 Firebase
+    // 初始化 Supabase
     // ============================================
-    let db = null;
-    let isFirebaseConfigured = false;
+    let supabase = null;
+    let isSupabaseConfigured = false;
 
     try {
-      if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
-        firebase.initializeApp(firebaseConfig);
-        db = firebase.firestore();
-        isFirebaseConfigured = true;
-        document.getElementById('firebase-notice').style.display = 'none';
+      if (SUPABASE_ANON_KEY !== 'YOUR_ANON_KEY_HERE' && SUPABASE_ANON_KEY.length > 20) {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        isSupabaseConfigured = true;
+        document.getElementById('config-notice').style.display = 'none';
+        document.getElementById('connection-status').className = 'status-badge connected';
+        document.getElementById('connection-status').innerHTML = '<i class="fas fa-check-circle"></i> 已连接';
       }
     } catch (e) {
-      console.error('Firebase 初始化失败:', e);
+      console.error('Supabase 初始化失败:', e);
     }
 
     // 动态背景
@@ -785,72 +821,106 @@
     // 鹦鹉数据管理
     let parrots = [];
 
-    // 从 Firebase 加载数据
-    function loadParrots() {
-      if (!isFirebaseConfigured) {
+    // 从 Supabase 加载数据
+    async function loadParrots() {
+      if (!isSupabaseConfigured) {
         document.getElementById('parrots-grid').innerHTML = `
           <div class="empty-state" style="grid-column: 1/-1;">
             <i class="fas fa-database"></i>
-            <h3>Firebase 未配置</h3>
-            <p>请按照 README.md 配置 Firebase 后刷新页面</p>
+            <h3>Supabase 未配置</h3>
+            <p>请按照 README.md 配置 Supabase 后刷新页面</p>
           </div>
         `;
         return;
       }
 
-      db.collection('parrots').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
-        parrots = [];
-        snapshot.forEach(doc => {
-          parrots.push({ id: doc.id, ...doc.data() });
-        });
-        renderParrots();
-        updateStats();
-      }, error => {
+      // 加载数据
+      const { data, error } = await supabase
+        .from('parrots')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
         console.error('加载数据失败:', error);
         document.getElementById('parrots-grid').innerHTML = `
           <div class="empty-state" style="grid-column: 1/-1;">
             <i class="fas fa-exclamation-circle"></i>
             <h3>加载失败</h3>
-            <p>请检查 Firebase 配置和网络连接</p>
+            <p>${error.message}</p>
+            <p style="margin-top: 10px; color: #888;">请检查：</p>
+            <ul style="text-align: left; max-width: 400px; margin: 10px auto; color: #aaa;">
+              <li>1. Supabase 配置是否正确</li>
+              <li>2. 是否创建了 parrots 表</li>
+              <li>3. 表结构是否包含所需字段</li>
+            </ul>
           </div>
         `;
-      });
+        return;
+      }
+
+      parrots = data || [];
+      renderParrots();
+      updateStats();
+
+      // 设置实时订阅
+      setupRealtimeSubscription();
     }
 
-    // 保存数据到 Firebase
-    async function saveParrotToFirebase(parrot) {
-      if (!isFirebaseConfigured) {
-        alert('Firebase 未配置，无法保存数据！');
+    // 设置实时订阅 - 数据变化自动更新
+    function setupRealtimeSubscription() {
+      supabase
+        .channel('parrots-channel')
+        .on('postgres_changes', 
+          { 
+            event: '*', 
+            schema: 'public', 
+            table: 'parrots' 
+          }, 
+          payload => {
+            console.log('数据变化:', payload);
+            loadParrots(); // 重新加载数据
+          }
+        )
+        .subscribe();
+    }
+
+    // 保存数据到 Supabase
+    async function saveParrotToSupabase(parrot) {
+      if (!isSupabaseConfigured) {
+        alert('Supabase 未配置，无法保存数据！');
         return false;
       }
 
-      try {
-        await db.collection('parrots').add({
-          ...parrot,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        return true;
-      } catch (e) {
-        console.error('保存失败:', e);
-        alert('保存失败：' + e.message);
+      const { data, error } = await supabase
+        .from('parrots')
+        .insert([parrot]);
+
+      if (error) {
+        console.error('保存失败:', error);
+        alert('保存失败：' + error.message);
         return false;
       }
+
+      return true;
     }
 
     // 删除鹦鹉
     async function deleteParrot(id) {
       if (!confirm('确定要删除这只鹦鹉吗？')) return;
 
-      if (!isFirebaseConfigured) {
-        alert('Firebase 未配置，无法删除！');
+      if (!isSupabaseConfigured) {
+        alert('Supabase 未配置，无法删除！');
         return;
       }
 
-      try {
-        await db.collection('parrots').doc(id).delete();
-      } catch (e) {
-        console.error('删除失败:', e);
-        alert('删除失败：' + e.message);
+      const { error } = await supabase
+        .from('parrots')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('删除失败:', error);
+        alert('删除失败：' + error.message);
       }
     }
 
@@ -985,7 +1055,7 @@
         });
       }
 
-      const success = await saveParrotToFirebase({
+      const success = await saveParrotToSupabase({
         name,
         price: parseInt(price),
         days: parseInt(days),
@@ -1059,7 +1129,7 @@
     }
 
     // 初始化
-    if (isFirebaseConfigured) {
+    if (isSupabaseConfigured) {
       loadParrots();
     } else {
       updateStats();
