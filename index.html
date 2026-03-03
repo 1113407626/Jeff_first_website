@@ -842,22 +842,15 @@
         sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         isSupabaseConfigured = true;
         
-        // 隐藏配置提示，显示登录界面
+        // 隐藏配置提示
         const configNotice = document.getElementById('config-notice');
         if (configNotice) configNotice.style.display = 'none';
-        
-        const adminLogin = document.getElementById('admin-login');
-        if (adminLogin) adminLogin.style.display = 'block';
         
         const connStatus = document.getElementById('connection-status');
         if (connStatus) {
           connStatus.className = 'status-badge connected';
           connStatus.innerHTML = '<i class="fas fa-check-circle"></i> 已连接';
         }
-      } else {
-        // 未配置时显示配置提示
-        const adminLogin = document.getElementById('admin-login');
-        if (adminLogin) adminLogin.style.display = 'none';
       }
     } catch (e) {
       console.error('Supabase 初始化失败:', e);
@@ -1226,9 +1219,10 @@
       if (input === ADMIN_PASSWORD) {
         document.getElementById('admin-login').style.display = 'none';
         document.getElementById('admin-form-container').style.display = 'block';
-        sessionStorage.setItem('adminLoggedIn', 'true');
+        document.getElementById('admin-password').value = '';
+        showToast('✅ 验证成功！', 'success');
       } else {
-        alert('❌ 密码错误！只有管理员可以访问。');
+        showToast('❌ 密码错误！', 'error');
         document.getElementById('admin-password').value = '';
       }
     }
@@ -1243,10 +1237,10 @@
 
     // 检查登录状态
     function checkLoginStatus() {
-      if (sessionStorage.getItem('adminLoggedIn') === 'true') {
-        document.getElementById('admin-login').style.display = 'none';
-        document.getElementById('admin-form-container').style.display = 'block';
-      }
+      // 刷新页面后自动退出登录，需要重新验证
+      sessionStorage.removeItem('adminLoggedIn');
+      document.getElementById('admin-login').style.display = 'block';
+      document.getElementById('admin-form-container').style.display = 'none';
     }
 
     // 切换页面
@@ -1265,7 +1259,11 @@
         adminSection.classList.add('show');
         navBtns[0].classList.remove('active');
         navBtns[1].classList.add('active');
-        checkLoginStatus();
+        // 每次点击管理鹦鹉都强制要求重新登录
+        document.getElementById('admin-login').style.display = 'block';
+        document.getElementById('admin-form-container').style.display = 'none';
+        document.getElementById('admin-password').value = '';
+        document.getElementById('admin-password').focus();
       }
     }
 
@@ -1293,6 +1291,15 @@
     } else {
       updateStats();
     }
+
+    // 页面加载时强制退出登录状态（安全）
+    window.addEventListener('load', () => {
+      sessionStorage.removeItem('adminLoggedIn');
+      const adminLogin = document.getElementById('admin-login');
+      const adminForm = document.getElementById('admin-form-container');
+      if (adminLogin) adminLogin.style.display = 'none';
+      if (adminForm) adminForm.style.display = 'none';
+    });
 
     // 窗口大小调整
     window.addEventListener('resize', () => {
