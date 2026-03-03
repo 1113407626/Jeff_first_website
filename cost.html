@@ -426,13 +426,13 @@
     const SUPABASE_URL = 'https://nxiwatmgedlvzlxmgyhw.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im54aXdhdG1nZWRsdnpseG1neWh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0OTI2NDgsImV4cCI6MjA4ODA2ODY0OH0.5VBRX8bZkrUiw1DL5Y9bpkMtC-0RVdaoFLEdqWXS2c4';
 
-    let supabase = null;
+    let supaclient = null;
     let parrots = [];
     let costs = [];
 
     // 初始化
     try {
-      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      supaclient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       loadData();
     } catch (e) {
       console.error('Supabase 初始化失败:', e);
@@ -456,7 +456,7 @@
     // 加载数据
     async function loadData() {
       // 加载鹦鹉
-      const { data: parrotsData, error: parrotsError } = await supabase
+      const { data: parrotsData, error: parrotsError } = await supaclient
         .from('parrots')
         .select('*')
         .order('created_at', { ascending: false });
@@ -470,7 +470,7 @@
       parrots = parrotsData || [];
 
       // 加载成本
-      const { data: costsData, error: costsError } = await supabase
+      const { data: costsData, error: costsError } = await supaclient
         .from('parrot_costs')
         .select('*');
 
@@ -656,7 +656,7 @@
     // 保存所有成本
     async function saveAllCosts() {
       const updates = costs.map(async (cost) => {
-        const { error } = await supabase
+        const { error } = await supaclient
           .from('parrot_costs')
           .upsert({
             id: cost.id,
