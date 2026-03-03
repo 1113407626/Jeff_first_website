@@ -15,15 +15,22 @@
 
 ## 🚀 快速配置（3 步完成！）
 
-### 第 1 步：创建数据表
+### 第 1 步：导入 CSV 创建表（最简单！）
 
 在你的 Supabase 项目：https://supabase.com/dashboard/project/nxiwatmgedlvzlxmgyhw
 
 1. 左侧菜单 → **Table Editor**
-2. 点击 **New table**
-3. 表名输入：`parrots`
-4. 取消勾选 "Enable Row Level Security"（简单模式）
-5. 点击 **Save**
+2. 点击 **Import data** → **CSV**
+3. 上传 `parrots-table.csv` 文件（或复制下面的内容）
+4. 表名输入：`parrots`
+5. 点击 **Import**
+
+**或者手动创建表：**
+
+1. **New table**
+2. 表名：`parrots`
+3. **取消勾选** "Enable Row Level Security"
+4. **Save**
 
 然后添加以下列（点击 **Add column**）：
 
