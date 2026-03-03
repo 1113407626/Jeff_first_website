@@ -801,9 +801,9 @@
 
           <div class="form-group">
             <label><i class="fas fa-video"></i> 鹦鹉视频 (可选)</label>
-            <input type="file" id="parrot-video" accept="video/*">
+            <input type="file" id="parrot-video" accept="video/mp4,video/x-m4v,video/*">
             <p style="color: #888; font-size: 0.85em; margin-top: 8px;">
-              <i class="fas fa-info-circle"></i> 建议：视频小于 2MB，或使用外链
+              <i class="fas fa-info-circle"></i> 建议：MP4 格式，小于 2MB
             </p>
           </div>
 
@@ -1039,7 +1039,7 @@
           </button>
           <div class="parrot-image-container">
             <img src="${p.image}" alt="${p.name}" class="parrot-image">
-            ${p.video ? `<video src="${p.video}" class="parrot-video" loop muted></video>` : ''}
+            ${p.video ? `<video src="${p.video}" class="parrot-video" loop muted playsinline webkit-playsinline></video>` : ''}
           </div>
           <div class="parrot-info">
             <div class="parrot-name">
@@ -1074,7 +1074,10 @@
       if (video) {
         card.classList.toggle('video-mode');
         if (card.classList.contains('video-mode')) {
-          video.play();
+          video.play().catch(e => {
+            console.error('视频播放失败:', e);
+            showToast('❌ 视频格式不支持，请上传 MP4 格式', 'error');
+          });
         } else {
           video.pause();
         }
@@ -1203,6 +1206,11 @@
         this.reset();
         document.getElementById('image-preview').innerHTML = '';
         showToast(`🎉 ${name} 已成功添加到云端！`, 'success');
+        
+        // 重新加载数据，实时更新画面
+        loadParrots();
+        
+        // 切换到首页
         showSection('home');
       }
 
