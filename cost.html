@@ -47,7 +47,8 @@
       gap: 15px;
     }
 
-    .nav-links a {
+    .nav-links a,
+    .nav-links .btn {
       color: #00ffff;
       text-decoration: none;
       padding: 10px 20px;
@@ -56,67 +57,10 @@
       transition: 0.3s;
     }
 
-    .nav-links a:hover {
+    .nav-links a:hover,
+    .nav-links .btn:hover {
       background: #00ffff;
       color: #000;
-    }
-
-    /* 管理员开关 */
-    .admin-toggle {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 20px;
-      background: rgba(255, 165, 0, 0.1);
-      border: 2px solid orange;
-      border-radius: 25px;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-
-    .admin-toggle:hover {
-      background: rgba(255, 165, 0, 0.2);
-      box-shadow: 0 0 15px rgba(255, 165, 0, 0.5);
-    }
-
-    .admin-toggle.active {
-      background: rgba(255, 165, 0, 0.3);
-      border-color: #ff6600;
-    }
-
-    .toggle-switch {
-      width: 50px;
-      height: 26px;
-      background: #333;
-      border-radius: 13px;
-      position: relative;
-      transition: 0.3s;
-    }
-
-    .toggle-switch::after {
-      content: '';
-      position: absolute;
-      top: 3px;
-      left: 3px;
-      width: 20px;
-      height: 20px;
-      background: #fff;
-      border-radius: 50%;
-      transition: 0.3s;
-    }
-
-    .admin-toggle.active .toggle-switch {
-      background: orange;
-    }
-
-    .admin-toggle.active .toggle-switch::after {
-      left: 27px;
-    }
-
-    .admin-label {
-      color: orange;
-      font-weight: 700;
-      font-size: 0.9em;
     }
 
     /* 统计卡片 */
@@ -549,19 +493,42 @@
     <nav class="navbar">
       <div class="logo">💰 鹦鹉成本核算系统</div>
       <div class="nav-links">
-        <div class="admin-toggle" id="admin-toggle" onclick="toggleAdminMode()">
-          <div class="toggle-switch"></div>
-          <span class="admin-label">管理员模式</span>
-        </div>
+        <button class="btn btn-primary" id="admin-login-btn" onclick="showAdminLogin()" style="padding: 10px 20px; font-size: 0.9em;">
+          <i class="fas fa-lock"></i> 管理员登录
+        </button>
+        <button class="btn btn-primary" id="admin-logout-btn" onclick="adminLogout()" style="padding: 10px 20px; font-size: 0.9em; display: none; background: linear-gradient(45deg, #ff6600, #ff4400);">
+          <i class="fas fa-sign-out-alt"></i> 退出管理
+        </button>
         <a href="index.html"><i class="fas fa-home"></i> 返回首页</a>
         <a href="#" onclick="location.reload()"><i class="fas fa-sync"></i> 刷新</a>
       </div>
     </nav>
 
-    <!-- 管理员模式提示 -->
-    <div class="admin-notice" id="admin-notice">
-      <i class="fas fa-shield-alt"></i>
-      <span>🔓 管理员模式已开启 - 所有字段可编辑</span>
+    <!-- 管理员登录弹窗 -->
+    <div id="admin-login-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center;">
+      <div style="background: rgba(0, 0, 0, 0.9); border: 2px solid #00ffff; border-radius: 20px; padding: 40px; text-align: center; max-width: 400px; box-shadow: 0 0 40px rgba(0, 255, 255, 0.5);">
+        <h2 style="color: #00ffff; margin-bottom: 25px; font-size: 1.5em;">
+          <i class="fas fa-lock"></i> 管理员验证
+        </h2>
+        <input type="password" id="admin-password-input" placeholder="请输入管理员密码" 
+               style="width: 100%; padding: 15px; background: rgba(0, 255, 255, 0.1); border: 2px solid #00ffff; border-radius: 10px; color: #fff; font-size: 1.1em; margin-bottom: 20px; text-align: center;"
+               onkeypress="if(event.key==='Enter') checkAdminPassword()">
+        <button class="btn btn-primary" onclick="checkAdminPassword()" style="width: 100%; padding: 15px; font-size: 1.1em;">
+          <i class="fas fa-unlock"></i> 解锁成本编辑
+        </button>
+        <button class="btn" onclick="closeAdminLogin()" style="width: 100%; padding: 12px; margin-top: 10px; background: rgba(255,255,255,0.1); color: #fff;">
+          <i class="fas fa-times"></i> 取消
+        </button>
+        <p style="color: #666; margin-top: 15px; font-size: 0.85em;">
+          <i class="fas fa-shield-alt"></i> 仅管理员可编辑成本数据
+        </p>
+      </div>
+    </div>
+
+    <!-- 管理员已登录提示 -->
+    <div class="admin-notice" id="admin-notice" style="background: rgba(0, 255, 0, 0.1); border-color: #00ff00;">
+      <i class="fas fa-check-circle" style="color: #00ff00;"></i>
+      <span style="color: #00ff00;">🔓 管理员已登录 - 所有成本字段可编辑</span>
     </div>
 
     <!-- 总体统计 -->
@@ -649,24 +616,47 @@
     let supaclient = null;
     let parrots = [];
     let costs = [];
-    let isAdminMode = false;
+    let isAdminLoggedIn = false;
 
-    // 切换管理员模式
-    function toggleAdminMode() {
-      isAdminMode = !isAdminMode;
-      const toggle = document.getElementById('admin-toggle');
-      const notice = document.getElementById('admin-notice');
-      
-      if (isAdminMode) {
-        toggle.classList.add('active');
-        notice.classList.add('active');
-        showToast('🔓 管理员模式已开启 - 所有字段可编辑', 'warning');
+    // 管理员密码（和 index.html 一致）
+    const ADMIN_PASSWORD = 'yan8752';
+
+    // 显示管理员登录弹窗
+    function showAdminLogin() {
+      document.getElementById('admin-login-modal').style.display = 'flex';
+      document.getElementById('admin-password-input').focus();
+    }
+
+    // 关闭登录弹窗
+    function closeAdminLogin() {
+      document.getElementById('admin-login-modal').style.display = 'none';
+      document.getElementById('admin-password-input').value = '';
+    }
+
+    // 检查管理员密码
+    function checkAdminPassword() {
+      const input = document.getElementById('admin-password-input').value;
+      if (input === ADMIN_PASSWORD) {
+        isAdminLoggedIn = true;
+        closeAdminLogin();
+        document.getElementById('admin-login-btn').style.display = 'none';
+        document.getElementById('admin-logout-btn').style.display = 'inline-flex';
+        document.getElementById('admin-notice').classList.add('active');
+        showToast('✅ 验证成功！所有字段现在可编辑', 'success');
+        renderParrots();
       } else {
-        toggle.classList.remove('active');
-        notice.classList.remove('active');
-        showToast('🔒 管理员模式已关闭', 'info');
+        showToast('❌ 密码错误！', 'error');
+        document.getElementById('admin-password-input').value = '';
       }
-      
+    }
+
+    // 管理员退出登录
+    function adminLogout() {
+      isAdminLoggedIn = false;
+      document.getElementById('admin-login-btn').style.display = 'inline-flex';
+      document.getElementById('admin-logout-btn').style.display = 'none';
+      document.getElementById('admin-notice').classList.remove('active');
+      showToast('🔒 已退出管理员模式', 'info');
       renderParrots();
     }
 
@@ -748,12 +738,19 @@
         <table class="parrot-table">
           <thead>
             <tr>
-              <th>🦜 鹦鹉名称</th>
-              <th>💰 变动成本</th>
-              <th>⚙️ 固定成本</th>
-              <th>📊 总成本</th>
-              <th>📋 状态</th>
-              <th>💵 销售/最低价</th>
+              <th style="min-width:120px">🦜 鹦鹉名称</th>
+              <th style="min-width:70px">📅 手养月</th>
+              <th style="min-width:80px">💰 购买</th>
+              <th style="min-width:65px">⚡ 电费</th>
+              <th style="min-width:65px">🥛 奶粉</th>
+              <th style="min-width:65px">🧻 垫料</th>
+              <th style="min-width:65px">💊 药品</th>
+              <th style="min-width:65px">🔧 杂费</th>
+              <th style="min-width:75px">📊 变动</th>
+              <th style="min-width:85px">⚙️ 固定</th>
+              <th style="min-width:75px">📈 总成本</th>
+              <th style="min-width:85px">📋 状态</th>
+              <th style="min-width:130px">💵 销售/最低</th>
             </tr>
           </thead>
           <tbody>
@@ -778,15 +775,17 @@
         // 计算天数
         const createdDate = parrot.created_at ? new Date(parrot.created_at) : new Date();
         const daysDiff = Math.floor((new Date() - createdDate) / (1000 * 60 * 60 * 24));
-        const monthsDiff = Math.max(0.1, daysDiff / 30); // 至少 0.1 个月，避免除零
+        // 优先使用自定义月数，否则自动计算
+        const monthsDiff = cost.custom_months || Math.max(0.1, daysDiff / 30);
 
-        // 计算变动成本
-        const variableCost = (cost.purchase_cost || 0) + 
-                            (cost.electricity_cost || 0) + 
-                            (cost.formula_cost || 0) + 
-                            (cost.bedding_cost || 0) + 
-                            (cost.medicine_cost || 0) + 
-                            (cost.misc_cost || 0);
+        // 计算变动成本（各项求和）
+        const purchaseCost = cost.purchase_cost || 0;
+        const electricityCost = cost.electricity_cost || 0;
+        const formulaCost = cost.formula_cost || 0;
+        const beddingCost = cost.bedding_cost || 0;
+        const medicineCost = cost.medicine_cost || 0;
+        const miscCost = cost.misc_cost || 0;
+        const variableCost = purchaseCost + electricityCost + formulaCost + beddingCost + medicineCost + miscCost;
 
         // 计算固定成本（折旧）
         const brooderDepreciation = (cost.brooder_price / cost.brooder_months) * monthsDiff;
@@ -805,42 +804,42 @@
             <td>
               <div class="parrot-name">
                 🦜 ${parrot.name}
-                <span class="days">手养 ${daysDiff} 天 · ${monthsDiff.toFixed(1)} 个月</span>
+                <span class="days">破壳：${createdDate.toLocaleDateString('zh-CN',{month:'2-digit',day:'2-digit'})}</span>
               </div>
             </td>
-            
             <td>
-              <input type="number" class="cost-input variable" 
-                     data-parrot-id="${parrot.id}" 
-                     value="${variableCost.toFixed(2)}"
-                     onchange="updateVariableCost('${parrot.id}', this.value)"
-                     step="0.01" min="0"
-                     ${!isAdminMode ? 'disabled' : ''}>
-              <div style="font-size: 0.7em; color: #666; margin-top: 5px;">
-                购：${(cost.purchase_cost || 0).toFixed(0)} | 电：${(cost.electricity_cost || 0).toFixed(0)} | 奶：${(cost.formula_cost || 0).toFixed(0)}
+              <input type="number" class="cost-input" id="months-${parrot.id}" 
+                     value="${monthsDiff.toFixed(1)}" step="0.1" min="0.1" 
+                     onchange="updateMonths('${parrot.id}', this.value)"
+                     style="width:100%;font-size:0.9em"
+                     ${!isAdminLoggedIn ? 'disabled' : ''}
+                     title="手养月数，可手动调整">
+            </td>
+            <td><input type="number" class="cost-input" value="${purchaseCost.toFixed(2)}" onchange="updateCostField('${parrot.id}','purchase_cost',this.value)" step="0.01" min="0" style="width:100%" ${!isAdminLoggedIn ? 'disabled' : ''}></td>
+            <td><input type="number" class="cost-input" value="${electricityCost.toFixed(2)}" onchange="updateCostField('${parrot.id}','electricity_cost',this.value)" step="0.01" min="0" style="width:100%" ${!isAdminLoggedIn ? 'disabled' : ''}></td>
+            <td><input type="number" class="cost-input" value="${formulaCost.toFixed(2)}" onchange="updateCostField('${parrot.id}','formula_cost',this.value)" step="0.01" min="0" style="width:100%" ${!isAdminLoggedIn ? 'disabled' : ''}></td>
+            <td><input type="number" class="cost-input" value="${beddingCost.toFixed(2)}" onchange="updateCostField('${parrot.id}','bedding_cost',this.value)" step="0.01" min="0" style="width:100%" ${!isAdminLoggedIn ? 'disabled' : ''}></td>
+            <td><input type="number" class="cost-input" value="${medicineCost.toFixed(2)}" onchange="updateCostField('${parrot.id}','medicine_cost',this.value)" step="0.01" min="0" style="width:100%" ${!isAdminLoggedIn ? 'disabled' : ''}></td>
+            <td><input type="number" class="cost-input" value="${miscCost.toFixed(2)}" onchange="updateCostField('${parrot.id}','misc_cost',this.value)" step="0.01" min="0" style="width:100%" ${!isAdminLoggedIn ? 'disabled' : ''}></td>
+            <td><div class="display-value variable" style="font-weight:700;font-size:0.95em">¥${variableCost.toFixed(2)}</div></td>
+            <td>
+              <div class="display-value fixed" style="font-size:0.95em;cursor:${isAdminLoggedIn ? 'pointer' : 'default'}" 
+                   ${isAdminLoggedIn ? `onclick="editFixedCosts('${parrot.id}')"` : ''} 
+                   title="${isAdminLoggedIn ? '点击编辑固定成本参数' : ''}">
+                ¥${fixedCost.toFixed(2)}
+              </div>
+              <div style="font-size:0.6em;color:#888;margin-top:2px;line-height:1.3">
+                保:¥${brooderDepreciation.toFixed(1)}<br>孵:¥${incubatorDepreciation.toFixed(1)}
               </div>
             </td>
-            
+            <td><div class="display-value total" style="font-size:1em">¥${totalCost.toFixed(2)}</div></td>
             <td>
-              <div class="display-value fixed">¥${fixedCost.toFixed(2)}</div>
-              <div style="font-size: 0.7em; color: #888; margin-top: 5px;">
-                保温箱：¥${brooderDepreciation.toFixed(1)}<br>
-                孵化器：¥${incubatorDepreciation.toFixed(1)}
-              </div>
-            </td>
-            
-            <td>
-              <div class="display-value total" style="font-size: 1.15em;">¥${totalCost.toFixed(2)}</div>
-            </td>
-            
-            <td>
-              <select class="status-select" data-parrot-id="${parrot.id}" onchange="updateStatus('${parrot.id}', this.value)">
+              <select class="status-select" data-parrot-id="${parrot.id}" onchange="updateStatus('${parrot.id}',this.value)" style="font-size:0.85em;padding:6px 4px">
                 <option value="pending" ${cost.status === 'pending' ? 'selected' : ''}>待销售</option>
                 <option value="sold" ${cost.status === 'sold' ? 'selected' : ''}>已销售</option>
                 <option value="kept" ${cost.status === 'kept' ? 'selected' : ''}>自留</option>
               </select>
             </td>
-            
             <td>
               ${cost.status === 'sold' ? `
                 <input type="number" class="sale-input" 
@@ -848,13 +847,14 @@
                        value="${cost.sale_price || 0}"
                        onchange="updateSalePrice('${parrot.id}', this.value)"
                        step="0.01" min="0"
-                       placeholder="售价">
-                <div class="profit-loss ${isProfit ? 'profit' : 'loss'}">
-                  ${isProfit ? '↑ 赚' : '↓ 亏'}¥${Math.abs(profitLoss).toFixed(2)}
+                       placeholder="售价"
+                       style="font-size:0.9em">
+                <div class="profit-loss ${isProfit ? 'profit' : 'loss'}" style="margin-top:4px;font-size:0.75em">
+                  ${isProfit ? '↑' : '↓'}¥${Math.abs(profitLoss).toFixed(1)}
                 </div>
               ` : `
-                <div class="display-value min-price" id="min-price-${parrot.id}">¥--</div>
-                ${isAdminMode ? `<button class="btn btn-edit" style="margin-top:6px" onclick="markAsSold('${parrot.id}')"><i class="fas fa-check"></i> 标记已售</button>` : ''}
+                <div class="display-value min-price" id="min-price-${parrot.id}" style="font-size:0.85em">¥--</div>
+                <button class="btn btn-edit" style="margin-top:4px;padding:4px 8px;font-size:0.7em" onclick="markAsSold('${parrot.id}')" ${!isAdminLoggedIn ? 'disabled' : 'style="opacity:0.5;cursor:not-allowed"'}><i class="fas fa-check"></i> 已售</button>
               `}
             </td>
           </tr>
@@ -863,6 +863,53 @@
 
       html += '</tbody></table>';
       container.innerHTML = html;
+    }
+
+    // 更新手养月数
+    function updateMonths(parrotId, value) {
+      const cost = costs.find(c => c.parrot_id === parrotId);
+      if (cost) {
+        cost.custom_months = parseFloat(value) || 0.1;
+      }
+      renderParrots();
+      calculateTotals();
+    }
+
+    // 编辑固定成本参数（每只鹦鹉可单独设置）
+    function editFixedCosts(parrotId) {
+      if (!isAdminLoggedIn) return;
+      const cost = costs.find(c => c.parrot_id === parrotId);
+      if (!cost) return;
+
+      const brooderPrice = prompt('保温箱价格 (元):', cost.brooder_price || 300);
+      if (brooderPrice === null) return;
+      cost.brooder_price = parseFloat(brooderPrice) || 300;
+
+      const brooderMonths = prompt('保温箱摊销 (月):', cost.brooder_months || 24);
+      if (brooderMonths === null) return;
+      cost.brooder_months = parseFloat(brooderMonths) || 24;
+
+      const incubatorPrice = prompt('孵化器价格 (元):', cost.incubator_price || 500);
+      if (incubatorPrice === null) return;
+      cost.incubator_price = parseFloat(incubatorPrice) || 500;
+
+      const incubatorMonths = prompt('孵化器摊销 (月):', cost.incubator_months || 24);
+      if (incubatorMonths === null) return;
+      cost.incubator_months = parseFloat(incubatorMonths) || 24;
+
+      renderParrots();
+      calculateTotals();
+      showToast('✅ 固定成本参数已更新', 'success');
+    }
+
+    // 更新单个成本字段
+    function updateCostField(parrotId, field, value) {
+      const cost = costs.find(c => c.parrot_id === parrotId);
+      if (cost) {
+        cost[field] = parseFloat(value) || 0;
+      }
+      renderParrots();
+      calculateTotals();
     }
 
     // 标记为已售
@@ -875,28 +922,6 @@
       renderParrots();
       calculateTotals();
       showToast('📝 已标记为待填售价', 'info');
-    }
-
-    // 更新变动成本
-    function updateVariableCost(parrotId, value) {
-      const cost = costs.find(c => c.parrot_id === parrotId);
-      if (cost) {
-        // 在管理员模式下，允许直接修改总变动成本
-        // 这里简单处理：将值分配到 purchase_cost，其他保持原样
-        const oldVariableCost = (cost.purchase_cost || 0) + 
-                               (cost.electricity_cost || 0) + 
-                               (cost.formula_cost || 0) + 
-                               (cost.bedding_cost || 0) + 
-                               (cost.medicine_cost || 0) + 
-                               (cost.misc_cost || 0);
-        const ratio = oldVariableCost > 0 ? (cost.purchase_cost || 0) / oldVariableCost : 0.6;
-        cost.purchase_cost = Math.round((parseFloat(value) || 0) * ratio * 100) / 100;
-        cost.electricity_cost = Math.round((parseFloat(value) || 0) * 0.1 * 100) / 100;
-        cost.formula_cost = Math.round((parseFloat(value) || 0) * 0.25 * 100) / 100;
-        cost.bedding_cost = Math.round((parseFloat(value) || 0) * 0.03 * 100) / 100;
-        cost.medicine_cost = Math.round((parseFloat(value) || 0) * 0.02 * 100) / 100;
-      }
-      calculateTotals();
     }
 
     // 更新状态
@@ -982,7 +1007,8 @@
         const cost = costs.find(c => c.parrot_id === parrot.id) || {};
         
         const createdDate = parrot.created_at ? new Date(parrot.created_at) : new Date();
-        const monthsDiff = Math.max(0.1, (new Date() - createdDate) / (1000 * 60 * 60 * 24 * 30));
+        const autoMonths = Math.max(0.1, (new Date() - createdDate) / (1000 * 60 * 60 * 24 * 30));
+        const monthsDiff = cost.custom_months || autoMonths;
 
         const variableCost = (cost.purchase_cost || 0) + 
                             (cost.electricity_cost || 0) + 
