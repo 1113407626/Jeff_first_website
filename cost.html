@@ -17,6 +17,124 @@
       padding: 20px;
     }
 
+    /* 登录页面覆盖层 */
+    #loginOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.98);
+      z-index: 99999;
+      display: none;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #loginOverlay.active {
+      display: flex;
+    }
+
+    .login-box {
+      background: rgba(0, 0, 0, 0.9);
+      border: 3px solid #00ffff;
+      border-radius: 25px;
+      padding: 50px 40px;
+      text-align: center;
+      max-width: 420px;
+      width: 90%;
+      box-shadow: 0 0 60px rgba(0, 255, 255, 0.4);
+      animation: glow 2s ease-in-out infinite;
+    }
+
+    @keyframes glow {
+      0%, 100% { box-shadow: 0 0 40px rgba(0, 255, 255, 0.3); }
+      50% { box-shadow: 0 0 70px rgba(0, 255, 255, 0.6); }
+    }
+
+    .login-box h2 {
+      color: #00ffff;
+      font-size: 1.8em;
+      margin-bottom: 15px;
+      text-shadow: 0 0 15px #00ffff;
+    }
+
+    .login-box .subtitle {
+      color: #888;
+      font-size: 0.95em;
+      margin-bottom: 35px;
+    }
+
+    .login-box input {
+      width: 100%;
+      padding: 18px 25px;
+      background: rgba(0, 255, 255, 0.08);
+      border: 2px solid #00ffff;
+      border-radius: 15px;
+      color: #fff;
+      font-size: 1.1em;
+      margin-bottom: 20px;
+      text-align: center;
+      transition: 0.3s;
+    }
+
+    .login-box input:focus {
+      outline: none;
+      border-color: #00ff00;
+      box-shadow: 0 0 25px rgba(0, 255, 255, 0.5);
+      background: rgba(0, 255, 255, 0.15);
+    }
+
+    .login-box input::placeholder {
+      color: #666;
+    }
+
+    .login-box .login-btn {
+      width: 100%;
+      padding: 18px 30px;
+      background: linear-gradient(45deg, #00ffff, #0088ff);
+      border: none;
+      border-radius: 15px;
+      color: #fff;
+      font-size: 1.1em;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.3s;
+      margin-bottom: 15px;
+    }
+
+    .login-box .login-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 35px rgba(0, 255, 255, 0.6);
+    }
+
+    .login-box .error-msg {
+      color: #ff0000;
+      font-size: 0.9em;
+      margin-top: 15px;
+      display: none;
+      text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+    }
+
+    .login-box .error-msg.visible {
+      display: block;
+      animation: shake 0.5s ease;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      75% { transform: translateX(10px); }
+    }
+
+    .login-box .hint {
+      color: #666;
+      font-size: 0.8em;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
     .container {
       max-width: 1600px;
       margin: 0 auto;
@@ -488,48 +606,40 @@
   </style>
 </head>
 <body>
-  <div class="container">
+  <!-- 登录覆盖层（未登录时显示） -->
+  <div id="loginOverlay">
+    <div class="login-box">
+      <h2><i class="fas fa-lock"></i> 管理员验证</h2>
+      <p class="subtitle">💰 鹦鹉成本核算系统 - 仅限管理员访问</p>
+      <input type="password" id="loginPassword" placeholder="请输入管理员密码" onkeypress="if(event.key==='Enter') handleLogin()">
+      <button class="login-btn" onclick="handleLogin()">
+        <i class="fas fa-unlock"></i> 解锁系统
+      </button>
+      <p class="error-msg" id="loginError">❌ 密码错误，请重试</p>
+      <p class="hint">
+        <i class="fas fa-shield-alt"></i> 系统已加密，仅授权人员可查看成本数据<br>
+        刷新页面或退出后需重新验证
+      </p>
+    </div>
+  </div>
+
+  <div class="container" id="mainContainer" style="display: none;">
     <!-- 导航 -->
     <nav class="navbar">
       <div class="logo">💰 鹦鹉成本核算系统</div>
       <div class="nav-links">
-        <button class="btn btn-primary" id="admin-login-btn" onclick="showAdminLogin()" style="padding: 10px 20px; font-size: 0.9em;">
-          <i class="fas fa-lock"></i> 管理员登录
-        </button>
-        <button class="btn btn-primary" id="admin-logout-btn" onclick="adminLogout()" style="padding: 10px 20px; font-size: 0.9em; display: none; background: linear-gradient(45deg, #ff6600, #ff4400);">
-          <i class="fas fa-sign-out-alt"></i> 退出管理
+        <span id="adminStatus" style="color: #00ff00; font-size: 0.85em; margin-right: 10px;">
+          <i class="fas fa-check-circle"></i> 管理员已登录
+        </span>
+        <button class="btn btn-primary" id="logout-btn" onclick="handleLogout()" style="padding: 10px 20px; font-size: 0.9em; background: linear-gradient(45deg, #ff6600, #ff4400);">
+          <i class="fas fa-sign-out-alt"></i> 退出登录
         </button>
         <a href="index.html"><i class="fas fa-home"></i> 返回首页</a>
         <a href="#" onclick="location.reload()"><i class="fas fa-sync"></i> 刷新</a>
       </div>
     </nav>
 
-    <!-- 管理员登录弹窗 -->
-    <div id="admin-login-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center;">
-      <div style="background: rgba(0, 0, 0, 0.9); border: 2px solid #00ffff; border-radius: 20px; padding: 40px; text-align: center; max-width: 400px; box-shadow: 0 0 40px rgba(0, 255, 255, 0.5);">
-        <h2 style="color: #00ffff; margin-bottom: 25px; font-size: 1.5em;">
-          <i class="fas fa-lock"></i> 管理员验证
-        </h2>
-        <input type="password" id="admin-password-input" placeholder="请输入管理员密码" 
-               style="width: 100%; padding: 15px; background: rgba(0, 255, 255, 0.1); border: 2px solid #00ffff; border-radius: 10px; color: #fff; font-size: 1.1em; margin-bottom: 20px; text-align: center;"
-               onkeypress="if(event.key==='Enter') checkAdminPassword()">
-        <button class="btn btn-primary" onclick="checkAdminPassword()" style="width: 100%; padding: 15px; font-size: 1.1em;">
-          <i class="fas fa-unlock"></i> 解锁成本编辑
-        </button>
-        <button class="btn" onclick="closeAdminLogin()" style="width: 100%; padding: 12px; margin-top: 10px; background: rgba(255,255,255,0.1); color: #fff;">
-          <i class="fas fa-times"></i> 取消
-        </button>
-        <p style="color: #666; margin-top: 15px; font-size: 0.85em;">
-          <i class="fas fa-shield-alt"></i> 仅管理员可编辑成本数据
-        </p>
-      </div>
-    </div>
 
-    <!-- 管理员已登录提示 -->
-    <div class="admin-notice" id="admin-notice" style="background: rgba(0, 255, 0, 0.1); border-color: #00ff00;">
-      <i class="fas fa-check-circle" style="color: #00ff00;"></i>
-      <span style="color: #00ff00;">🔓 管理员已登录 - 所有成本字段可编辑</span>
-    </div>
 
     <!-- 总体统计 -->
     <div class="stats-grid">
@@ -618,56 +728,80 @@
     let costs = [];
     let isAdminLoggedIn = false;
 
-    // 管理员密码（和 index.html 一致）
+    // 管理员密码
     const ADMIN_PASSWORD = 'yan8752';
 
-    // 显示管理员登录弹窗
-    function showAdminLogin() {
-      document.getElementById('admin-login-modal').style.display = 'flex';
-      document.getElementById('admin-password-input').focus();
-    }
+    // 页面加载时检查登录状态
+    document.addEventListener('DOMContentLoaded', function() {
+      checkLoginStatus();
+    });
 
-    // 关闭登录弹窗
-    function closeAdminLogin() {
-      document.getElementById('admin-login-modal').style.display = 'none';
-      document.getElementById('admin-password-input').value = '';
-    }
-
-    // 检查管理员密码
-    function checkAdminPassword() {
-      const input = document.getElementById('admin-password-input').value;
-      if (input === ADMIN_PASSWORD) {
+    // 检查登录状态（使用 sessionStorage，刷新后失效）
+    function checkLoginStatus() {
+      const isLoggedIn = sessionStorage.getItem('costSystemLoggedIn') === 'true';
+      const loginOverlay = document.getElementById('loginOverlay');
+      const mainContainer = document.getElementById('mainContainer');
+      
+      if (isLoggedIn) {
+        // 已登录，隐藏登录页，显示主界面
+        loginOverlay.classList.remove('active');
+        mainContainer.style.display = 'block';
         isAdminLoggedIn = true;
-        closeAdminLogin();
-        document.getElementById('admin-login-btn').style.display = 'none';
-        document.getElementById('admin-logout-btn').style.display = 'inline-flex';
-        document.getElementById('admin-notice').classList.add('active');
-        showToast('✅ 验证成功！所有字段现在可编辑', 'success');
-        renderParrots();
+        // 加载数据
+        try {
+          supaclient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+          loadData();
+        } catch (e) {
+          console.error('Supabase 初始化失败:', e);
+          showToast('❌ 数据库连接失败', 'error');
+        }
       } else {
-        showToast('❌ 密码错误！', 'error');
-        document.getElementById('admin-password-input').value = '';
+        // 未登录，显示登录页，隐藏主界面
+        loginOverlay.classList.add('active');
+        mainContainer.style.display = 'none';
+        isAdminLoggedIn = false;
       }
     }
 
-    // 管理员退出登录
-    function adminLogout() {
-      isAdminLoggedIn = false;
-      document.getElementById('admin-login-btn').style.display = 'inline-flex';
-      document.getElementById('admin-logout-btn').style.display = 'none';
-      document.getElementById('admin-notice').classList.remove('active');
-      showToast('🔒 已退出管理员模式', 'info');
-      renderParrots();
+    // 处理登录
+    function handleLogin() {
+      const input = document.getElementById('loginPassword').value;
+      const errorEl = document.getElementById('loginError');
+      
+      if (input === ADMIN_PASSWORD) {
+        // 登录成功，存储到 sessionStorage（刷新后失效）
+        sessionStorage.setItem('costSystemLoggedIn', 'true');
+        sessionStorage.setItem('costSystemAdmin', 'admin');
+        
+        // 清空密码
+        document.getElementById('loginPassword').value = '';
+        errorEl.classList.remove('visible');
+        
+        // 更新 UI
+        checkLoginStatus();
+        showToast('✅ 验证成功！欢迎管理员', 'success');
+      } else {
+        // 登录失败
+        errorEl.classList.add('visible');
+        document.getElementById('loginPassword').value = '';
+        document.getElementById('loginPassword').focus();
+      }
     }
 
-    // 初始化
-    try {
-      supaclient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      loadData();
-    } catch (e) {
-      console.error('Supabase 初始化失败:', e);
-      showToast('❌ 数据库连接失败', 'error');
+    // 处理登出
+    function handleLogout() {
+      if (confirm('确定要退出登录吗？退出后将无法查看成本数据。')) {
+        // 清除会话
+        sessionStorage.removeItem('costSystemLoggedIn');
+        sessionStorage.removeItem('costSystemAdmin');
+        
+        // 显示登录页
+        checkLoginStatus();
+        showToast('🔒 已安全退出', 'info');
+      }
     }
+
+    // 初始化已移到 checkLoginStatus 中，登录后才加载数据
 
     // Toast 提示
     function showToast(message, type = 'info') {
@@ -812,20 +946,19 @@
                      value="${monthsDiff.toFixed(1)}" step="0.1" min="0.1" 
                      onchange="updateMonths('${parrot.id}', this.value)"
                      style="width:100%;font-size:0.9em"
-                     ${!isAdminLoggedIn ? 'disabled' : ''}
                      title="手养月数，可手动调整">
             </td>
-            <td><input type="number" class="cost-input" value="${purchaseCost.toFixed(2)}" onchange="updateCostField('${parrot.id}','purchase_cost',this.value)" step="0.01" min="0" style="width:100%" ${!isAdminLoggedIn ? 'disabled' : ''}></td>
-            <td><input type="number" class="cost-input" value="${electricityCost.toFixed(2)}" onchange="updateCostField('${parrot.id}','electricity_cost',this.value)" step="0.01" min="0" style="width:100%" ${!isAdminLoggedIn ? 'disabled' : ''}></td>
-            <td><input type="number" class="cost-input" value="${formulaCost.toFixed(2)}" onchange="updateCostField('${parrot.id}','formula_cost',this.value)" step="0.01" min="0" style="width:100%" ${!isAdminLoggedIn ? 'disabled' : ''}></td>
-            <td><input type="number" class="cost-input" value="${beddingCost.toFixed(2)}" onchange="updateCostField('${parrot.id}','bedding_cost',this.value)" step="0.01" min="0" style="width:100%" ${!isAdminLoggedIn ? 'disabled' : ''}></td>
-            <td><input type="number" class="cost-input" value="${medicineCost.toFixed(2)}" onchange="updateCostField('${parrot.id}','medicine_cost',this.value)" step="0.01" min="0" style="width:100%" ${!isAdminLoggedIn ? 'disabled' : ''}></td>
-            <td><input type="number" class="cost-input" value="${miscCost.toFixed(2)}" onchange="updateCostField('${parrot.id}','misc_cost',this.value)" step="0.01" min="0" style="width:100%" ${!isAdminLoggedIn ? 'disabled' : ''}></td>
+            <td><input type="number" class="cost-input" value="${purchaseCost.toFixed(2)}" onchange="updateCostField('${parrot.id}','purchase_cost',this.value)" step="0.01" min="0" style="width:100%"></td>
+            <td><input type="number" class="cost-input" value="${electricityCost.toFixed(2)}" onchange="updateCostField('${parrot.id}','electricity_cost',this.value)" step="0.01" min="0" style="width:100%"></td>
+            <td><input type="number" class="cost-input" value="${formulaCost.toFixed(2)}" onchange="updateCostField('${parrot.id}','formula_cost',this.value)" step="0.01" min="0" style="width:100%"></td>
+            <td><input type="number" class="cost-input" value="${beddingCost.toFixed(2)}" onchange="updateCostField('${parrot.id}','bedding_cost',this.value)" step="0.01" min="0" style="width:100%"></td>
+            <td><input type="number" class="cost-input" value="${medicineCost.toFixed(2)}" onchange="updateCostField('${parrot.id}','medicine_cost',this.value)" step="0.01" min="0" style="width:100%"></td>
+            <td><input type="number" class="cost-input" value="${miscCost.toFixed(2)}" onchange="updateCostField('${parrot.id}','misc_cost',this.value)" step="0.01" min="0" style="width:100%"></td>
             <td><div class="display-value variable" style="font-weight:700;font-size:0.95em">¥${variableCost.toFixed(2)}</div></td>
             <td>
-              <div class="display-value fixed" style="font-size:0.95em;cursor:${isAdminLoggedIn ? 'pointer' : 'default'}" 
-                   ${isAdminLoggedIn ? `onclick="editFixedCosts('${parrot.id}')"` : ''} 
-                   title="${isAdminLoggedIn ? '点击编辑固定成本参数' : ''}">
+              <div class="display-value fixed" style="font-size:0.95em;cursor:pointer" 
+                   onclick="editFixedCosts('${parrot.id}')" 
+                   title="点击编辑固定成本参数">
                 ¥${fixedCost.toFixed(2)}
               </div>
               <div style="font-size:0.6em;color:#888;margin-top:2px;line-height:1.3">
@@ -854,7 +987,7 @@
                 </div>
               ` : `
                 <div class="display-value min-price" id="min-price-${parrot.id}" style="font-size:0.85em">¥--</div>
-                <button class="btn btn-edit" style="margin-top:4px;padding:4px 8px;font-size:0.7em" onclick="markAsSold('${parrot.id}')" ${!isAdminLoggedIn ? 'disabled' : 'style="opacity:0.5;cursor:not-allowed"'}><i class="fas fa-check"></i> 已售</button>
+                <button class="btn btn-edit" style="margin-top:4px;padding:4px 8px;font-size:0.7em" onclick="markAsSold('${parrot.id}')"><i class="fas fa-check"></i> 已售</button>
               `}
             </td>
           </tr>
@@ -877,7 +1010,6 @@
 
     // 编辑固定成本参数（每只鹦鹉可单独设置）
     function editFixedCosts(parrotId) {
-      if (!isAdminLoggedIn) return;
       const cost = costs.find(c => c.parrot_id === parrotId);
       if (!cost) return;
 
